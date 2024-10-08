@@ -23,8 +23,8 @@ This Discord bot helps monitor users' clock-in, break, and meeting statuses in r
 1. **Clone the Repository**
 
     ```bash
-    git clone https://github.com/yourusername/discord-clock-bot.git
-    cd discord-clock-bot
+    git clone https://github.com/Stormesh/ClockInBot.git
+    cd ClockInBot
     ```
 2. **Install Dependencies**
 
@@ -84,12 +84,12 @@ This Discord bot helps monitor users' clock-in, break, and meeting statuses in r
 
 ## Contributing
 Feel free to contribute to this project and help make it better. You can contribute by:
-    - Forking the repository
-    - Cloning the repository to your local machine
-    - Creating a new branch for your changes
-    - Making your changes
-    - Pushing your changes to your fork
-    - Submitting a pull request
+- Forking the repository
+- Cloning the repository to your local machine
+- Creating a new branch for your changes
+- Making your changes
+- Pushing your changes to your fork
+- Submitting a pull request
 
 ## License
 This project is licensed under the MIT License.
