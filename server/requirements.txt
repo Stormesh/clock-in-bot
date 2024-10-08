@@ -1,0 +1,6 @@
+discord.py
+python-dotenv
+aiohttp
+Flask
+Flask-Cors
+Flask-SocketIO

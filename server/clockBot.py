@@ -1,12 +1,12 @@
-import discord, datetime, asyncio
-import aiohttp, json, sys
-import math, os, aiofiles, threading
+import discord, datetime, math
+import aiohttp, json, asyncio
+import os, aiofiles, threading
 from discord.ext import commands
 from dotenv import load_dotenv
 from typing import Optional, Any
 from flask import Flask, jsonify
 from flask_cors import CORS
-from flask_socketio import SocketIO
+from flask_socketio import SocketIO, emit
 
 app = Flask(__name__)
 CORS(app)
@@ -75,36 +75,6 @@ def get_clock_seconds(time: int) -> int:
 def get_clock_time(time: int) -> str:
     return f'{get_clock_hours(time):02d};{get_clock_minutes(time):02d}'
 
-def print_user_times():
-    sys.stdout.write('\r')
-
-    output: list[str] = []
-
-    for data in user_data:
-        user_id = data['id']
-        user = bot.get_user(user_id)
-        user_name = user.display_name if user else user_id
-
-        hours = get_clock_hours(data['clockTime'])
-        mins = get_clock_minutes(data['clockTime'])
-        secs = get_clock_seconds(data['clockTime'])
-        timer = f'{hours:02d}:{mins:02d}:{secs:02d}'
-
-        meeting_hours = get_clock_hours(data['meetingTime'])
-        meeting_mins = get_clock_minutes(data['meetingTime'])
-        meeting_secs = get_clock_seconds(data['meetingTime'])
-        meeting_timer = f'{meeting_hours:02d}:{meeting_mins:02d}:{meeting_secs:02d}'
-
-        break_hours = get_clock_hours(data['breakTime'])
-        break_mins = get_clock_minutes(data['breakTime'])
-        break_secs = get_clock_seconds(data['breakTime'])
-        break_timer = f'{break_hours:02d}:{break_mins:02d}:{break_secs:02d}'
-
-        output.append(f'{user_name} | Clock: {timer} | Meeting: {meeting_timer} | Break: {break_timer}')
-
-    sys.stdout.write('\n'.join(output))
-    sys.stdout.flush()
-
 async def clock_in(interaction: discord.Interaction, back: bool = False):
     user_id = interaction.user.id
     user_name = interaction.user.display_name
@@ -134,14 +104,14 @@ async def clock_in(interaction: discord.Interaction, back: bool = False):
             user['onMeeting'] = False
 
         user['isClockedIn'] = True
-        socketio.emit('update', {'message': f'{user_name} has clocked in.'})
+        emit('update', {'message': f'{user_name} has clocked in.'})
 
         while user['isClockedIn']:
             # print_user_times()
             await asyncio.sleep(1)
             user['clockTime'] += 1
             if user['clockTime'] % 60 == 0:
-                socketio.emit('update', {'message': f'{user_name}\'s time updated.'})
+                emit('update', {'message': f'{user_name}\'s time updated.'})
 
 async def clock_out(interaction: discord.Interaction, log: bool = False):
     global data
@@ -232,7 +202,7 @@ async def clock_out(interaction: discord.Interaction, log: bool = False):
                         await get(sheet_url_str)
                     except Exception as e:
                         print(f'Error while patching data: {e}')
-            socketio.emit('update', {'message': f'{interaction.user.display_name} has clocked out.'})
+            emit('update', {'message': f'{interaction.user.display_name} has clocked out.'})
     return f'{today.strftime('%A %m/%d/%Y')} - {interaction.user.mention} worked a total of {weekHours} hours; Business time of {hours} hours and {minutes} minutes, and meeting time of {meetingHours} hours and {meetingMinutes} minutes.\n{interaction.user.mention} also took a break of {breakHours} hours and {breakMinutes} minutes.'
 
 async def meeting_in(interaction: discord.Interaction):
@@ -245,14 +215,14 @@ async def meeting_in(interaction: discord.Interaction):
     user['isClockedIn'] = False
     user['onBreak'] = False
     user['onMeeting'] = True
-    socketio.emit('update', {'message': f'{interaction.user.display_name} went on a meeting.'})
+    emit('update', {'message': f'{interaction.user.display_name} went on a meeting.'})
 
     while user['onMeeting']:
         # print_user_times()
         await asyncio.sleep(1)
         user['meetingTime'] += 1
         if user['meetingTime'] % 60 == 0:
-            socketio.emit('update', {'message': f'{user_name}\'s time updated.'})
+            emit('update', {'message': f'{user_name}\'s time updated.'})
 
 async def break_in(_user: discord.Member, interaction: discord.Interaction):
     global break_time_limit, part_break_time_limit
@@ -265,7 +235,7 @@ async def break_in(_user: discord.Member, interaction: discord.Interaction):
     user['isClockedIn'] = False
     user['onMeeting'] = False
     user['onBreak'] = True
-    socketio.emit('update', {'message': f'{interaction.user.display_name} went on a break.'})
+    emit('update', {'message': f'{interaction.user.display_name} went on a break.'})
 
     break_limit = break_time_limit
 
@@ -294,7 +264,7 @@ async def break_in(_user: discord.Member, interaction: discord.Interaction):
         await asyncio.sleep(1)
         user['breakTime'] += 1
         if user['breakTime'] % 60 == 0:
-            socketio.emit('update', {'message': f'{user_name}\'s time updated.'})
+            emit('update', {'message': f'{user_name}\'s time updated.'})
 
         if user['breakTime'] == break_time_warning:
             await send_dm(_user, f'{_user.mention}, you have 2 minutes left on your break.')

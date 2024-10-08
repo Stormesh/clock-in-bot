@@ -1,0 +1,95 @@
+# Discord Clock-In Bot
+
+This Discord bot helps monitor users' clock-in, break, and meeting statuses in real-time. The bot tracks user activity, allowing for effective time management and easy monitoring of current statuses.
+
+## Features
+
+- **Clock-In/Clock-Out**: Users can clock in and out of work.
+- **Break Management**: Track when users go on and off breaks.
+- **Meeting Status**: Monitor users when they are in meetings.
+- **Real-Time Monitoring**: The web app updates user statuses in real-time with clarity, showing who is clocked in, on break, or in a meeting.
+- **Flask Integration**: Sends user data to a Next.js web app for real-time monitoring of who is clocked in.
+
+## Setup and Installation
+
+### Prerequisites
+
+- Python 3.x
+- `discord.py` library for interacting with Discord
+- Flask for the web server to send user data to your Next.js app
+
+### Installation
+
+1. **Clone the Repository**
+
+    ```bash
+    git clone https://github.com/yourusername/discord-clock-bot.git
+    cd discord-clock-bot
+    ```
+2. **Install Dependencies**
+
+    ```bash
+    pip install -r requirements.txt
+    ```
+3. **Set Up Discord Bot**
+    
+    - Create a new Discord bot on the [Discord Developer Portal](https://discord.com/developers/applications).
+    - Copy the bot token and add it to the `/server/.env` file like this...
+        ```
+        BOT_TOKEN=your_token_here
+        ```
+4. **Set up the bot on your Discord server**
+
+    - Create a new Discord server or use an existing one.
+    - Add the bot to your server using the OAuth2 URL generated on the Discord Developer Portal.
+    - Give the bot the necessary permissions to read and send messages.
+    - Create a new text channel for the bot to send messages.
+
+5. **Run the Bot**
+    
+    ```bash
+    python clockBot.py
+    ```
+
+6. **Set up the Next.js Web App**
+
+    - In your client directory, run the following commands:
+        ```bash
+        npm install # To install dependencies
+        npm run dev # To start the development server
+        ```
+    - Visit `http://localhost:3000` to see the web app in action.
+    - The Flask server will send user data to the Next.js app for real-time monitoring.
+    - You can customize the web app to suit your needs.
+
+## Usage
+1. **Clock-In/Clock-Out**
+
+    - Users can clock in and out by pressing the `Clock In` or `Clock Out` buttons.
+
+2. **Break Management**
+
+    - Users can go on breaks by pressing the `Break` button.
+    - Users can end their breaks by pressing the `Clock Back` button.
+
+3. **Meeting Status**
+    
+    - Users can set their status to `In a Meeting` by pressing the `Meeting In` button.
+    - Users can set their status to `Not in a Meeting` by pressing the `Clock Back` button.
+
+4. **Real-Time Monitoring**
+
+    - The web app updates user statuses in real-time.
+    - The admin can see who is clocked in, on break, or in a meeting.
+
+## Contributing
+Feel free to contribute to this project and help make it better. You can contribute by:
+    - Forking the repository
+    - Cloning the repository to your local machine
+    - Creating a new branch for your changes
+    - Making your changes
+    - Pushing your changes to your fork
+    - Submitting a pull request
+
+## License
+This project is licensed under the MIT License.
