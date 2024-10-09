@@ -15,7 +15,7 @@ This Discord bot helps monitor users' clock-in, break, and meeting statuses in r
 ### Prerequisites
 
 - Python 3.x
-- Node JS
+- Node.js
 
 ### Installation
 
