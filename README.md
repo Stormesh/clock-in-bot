@@ -15,8 +15,7 @@ This Discord bot helps monitor users' clock-in, break, and meeting statuses in r
 ### Prerequisites
 
 - Python 3.x
-- `discord.py` library for interacting with Discord
-- Flask for the web server to send user data to your Next.js app
+- Node JS
 
 ### Installation
 
