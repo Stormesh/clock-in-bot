@@ -30,7 +30,8 @@ const ClockCard: FC<UserProps> = ({
   const timeFormat = (time: number) => {
     const hours = Math.floor(time / 3600);
     const minutes = Math.floor((time % 3600) / 60);
-    return `${setZeros(hours)}:${setZeros(minutes)}`;
+    const seconds = time % 60;
+    return `${setZeros(hours)}:${setZeros(minutes)}:${setZeros(seconds)}`;
   };
 
   const showEffect = (effect: boolean, emoji: string) => {
