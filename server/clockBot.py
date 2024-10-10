@@ -109,8 +109,9 @@ async def clock_in(interaction: discord.Interaction, back: bool = False):
         while user['isClockedIn']:
             # print_user_times()
             await asyncio.sleep(1)
-            user['clockTime'] += 1
-            socketio.emit('update', {'message': f'{user_name}\'s time updated.'})
+            if user['isClockedIn']:
+                user['clockTime'] += 1
+                socketio.emit('update', {'message': f'{user_name}\'s time updated.'})
 
 async def clock_out(interaction: discord.Interaction, log: bool = False):
     global data
@@ -219,8 +220,9 @@ async def meeting_in(interaction: discord.Interaction):
     while user['onMeeting']:
         # print_user_times()
         await asyncio.sleep(1)
-        user['meetingTime'] += 1
-        socketio.emit('update', {'message': f'{user_name}\'s time updated.'})
+        if user['onMeeting']:
+            user['meetingTime'] += 1
+            socketio.emit('update', {'message': f'{user_name}\'s time updated.'})
 
 async def break_in(_user: discord.Member, interaction: discord.Interaction):
     global break_time_limit, part_break_time_limit
@@ -260,8 +262,9 @@ async def break_in(_user: discord.Member, interaction: discord.Interaction):
     while user['onBreak']:
         # print_user_times()
         await asyncio.sleep(1)
-        user['breakTime'] += 1
-        socketio.emit('update', {'message': f'{user_name}\'s time updated.'})
+        if user['onBreak']:
+            user['breakTime'] += 1
+            socketio.emit('update', {'message': f'{user_name}\'s time updated.'})
 
         if user['breakTime'] == break_time_warning:
             await send_dm(_user, f'{_user.mention}, you have 2 minutes left on your break.')

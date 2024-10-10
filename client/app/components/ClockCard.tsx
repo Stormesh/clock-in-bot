@@ -38,6 +38,15 @@ const ClockCard: FC<UserProps> = ({
     return effect ? <span className={styles.onEffect}>{emoji}</span> : null;
   }
 
+  const timeElement = (time: number, effect: boolean, emoji: string) => {
+    return (
+      <td className={styles.clockTime}>
+        {timeFormat(time)}
+        {showEffect(effect, emoji)}
+      </td>
+    );
+  }
+
   return (
     <tr>
       <td>
@@ -52,18 +61,9 @@ const ClockCard: FC<UserProps> = ({
         </div>
         <span className={styles.userName}>{name}</span>
       </td>
-      <td>
-        {timeFormat(clockTime)}
-        {showEffect(isClockedIn, "⏲️")}
-      </td>
-      <td>
-        {timeFormat(meetingTime)}
-        {showEffect(onMeeting, "📅")}
-      </td>
-      <td>
-        {timeFormat(breakTime)}
-        {showEffect(onBreak, "🍔")}
-      </td>
+      {timeElement(clockTime, isClockedIn, "🕒")}
+      {timeElement(meetingTime, onMeeting, "📅")}
+      {timeElement(breakTime, onBreak, "☕")}
     </tr>
   );
 };
