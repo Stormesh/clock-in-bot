@@ -1,6 +1,8 @@
 discord.py
 python-dotenv
+aiofiles
 aiohttp
+audioop-lts
 Flask
 Flask-Cors
 Flask-SocketIO
