@@ -255,11 +255,13 @@ async def check_role(interaction: discord.Interaction):
     server = next((server for server in get_data() if server['id'] == interaction.guild_id))
     if server:
         agent_id = int(server['roleId'])
+        part_id = int(server['partRoleId'])
         if interaction.guild:
             agent_role = interaction.guild.get_role(agent_id)
-            if agent_role:
+            part_role = interaction.guild.get_role(part_id)
+            if agent_role or part_role:
                 if isinstance(interaction.user, discord.Member):
-                    if agent_role not in interaction.user.roles:
+                    if not (agent_role in interaction.user.roles or part_role in interaction.user.roles):
                         await interaction.followup.send('You don\'t have permission to clock in.', ephemeral=True)
                         return False
                 else:
@@ -300,7 +302,7 @@ class ClockInView(discord.ui.View):
             if isinstance(interaction.user, discord.Member):
                 if server:
                     if interaction.guild:
-                        clockInId = server.get('clockRoleId') or server.get('partRoleId')
+                        clockInId = server.get('clockRoleId')
                         if clockInId:
                             clockInRole = interaction.guild.get_role(int(clockInId))
                             if clockInRole:
@@ -348,7 +350,7 @@ class ClockInView(discord.ui.View):
                     if isinstance(interaction.user, discord.Member):
                         if server:
                             if interaction.guild:
-                                clock_in_id = server.get('clockRoleId') or server.get('partRoleId')
+                                clock_in_id = server.get('clockRoleId')
                                 if clock_in_id:
                                     clock_in_role = interaction.guild.get_role(int(clock_in_id))
                                     if clock_in_role in interaction.user.roles:
@@ -397,7 +399,7 @@ class ClockInView(discord.ui.View):
 
                         if isinstance(interaction.user, discord.Member):
                             if interaction.guild:
-                                clock_in_id = server.get('clockRoleId') or server.get('partRoleId')
+                                clock_in_id = server.get('clockRoleId')
                                 if clock_in_id:
                                     clock_in_role = interaction.guild.get_role(int(clock_in_id))
                                     if clock_in_role in interaction.user.roles:
@@ -461,7 +463,7 @@ class ClockInView(discord.ui.View):
                                 if meeting_role in interaction.user.roles:
                                     await interaction.user.remove_roles(meeting_role)
 
-                            clock_in_id = server.get('clockRoleId') or server.get('partRoleId')
+                            clock_in_id = server.get('clockRoleId')
                             if clock_in_id:
                                 if interaction.guild:
                                     clock_in_role = interaction.guild.get_role(int(clock_in_id))
@@ -504,7 +506,7 @@ class ClockInView(discord.ui.View):
                             if isinstance(log_channel, discord.TextChannel):
                                 await log_channel.send(embed=embed)
                             if isinstance(interaction.user, discord.Member):
-                                clock_role_id = server.get('clockRoleId') or server.get('partRoleId')
+                                clock_role_id = server.get('clockRoleId')
                                 if clock_role_id:
                                     clock_in_role = interaction.guild.get_role(int(clock_role_id))
                                     if clock_in_role in interaction.user.roles:
