@@ -3,6 +3,7 @@ python-dotenv
 aiofiles
 aiohttp
 audioop-lts
+toml
 Flask
 Flask-Cors
 Flask-SocketIO
