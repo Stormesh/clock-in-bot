@@ -1,6 +1,9 @@
 import discord, datetime, math
-import aiohttp, json, asyncio
-import os, aiofiles, threading
+import asyncio, os, threading
+import toml
+from modules.dis_data import get_data, read_data, save_data, add_data
+from modules.rest import get, post, patch
+import modules.clock_str as clock_str
 from discord.ext import commands
 from dotenv import load_dotenv
 from typing import Optional, Any
@@ -15,33 +18,6 @@ socketio = SocketIO(app, cors_allowed_origins='*')
 load_dotenv()
 BOT_TOKEN = os.getenv('BOT_TOKEN')
 
-data: list[dict[str, str | int]] = []
-
-async def read_data():
-    global data
-    async with aiofiles.open('data.json', 'r') as f:
-        data = json.loads(await f.read())
-
-async def save_data():
-    global data
-    async with aiofiles.open('data.json', 'w') as f:
-        await f.write(json.dumps(data, indent=4))
-
-async def get(url: str):
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url) as response:
-            return await response.json()
-
-async def post(url: str, data: dict[Any, Any]):
-    async with aiohttp.ClientSession() as session:
-        async with session.post(url, json=data) as response:
-            return await response.json()
-
-async def patch(url: str, data: dict[Any, Any]):
-    async with aiohttp.ClientSession() as session:
-        async with session.patch(url, json=data) as response:
-            return await response.json()
-
 intents = discord.Intents.default()
 intents.members = True
 intents.message_content = True
@@ -49,31 +25,22 @@ intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents=intents)
 
 user_data: list[dict[str, Any]] = []
-server_data: list[dict[str, Any]] = []
 
-break_time_limit = 30 * 60 # 30 minutes
-part_break_time_limit = 15 * 60 # 15 minutes
+config = toml.load('config.toml')
+
+break_time_limit = (config['break']['break_time'] if config else 30) * 60 # 30 minutes
+part_break_time_limit = (config['break']['part_break_time'] if config else 15) * 60 # 15 minutes
 
 no_interaction_message = 'You have to clock in first.'
-
-users_displayed = False
 
 @app.route('/api/users', methods=['GET'])
 def get_user_data():
     return jsonify(user_data)
 
-
-def get_clock_hours(time: int) -> int:
-    return time // 60 // 60
-
-def get_clock_minutes(time: int) -> int:
-    return time // 60 % 60
-
-def get_clock_seconds(time: int) -> int:
-    return time % 60
-
-def get_clock_time(time: int) -> str:
-    return f'{get_clock_hours(time):02d};{get_clock_minutes(time):02d}'
+@app.route('/api/users/<int:id>', methods=['GET'])
+def get_user(id: int):
+    user = next((user for user in user_data if user['id'] == id), None)
+    return jsonify(user)
 
 async def clock_in(interaction: discord.Interaction, back: bool = False):
     user_id = interaction.user.id
@@ -93,9 +60,10 @@ async def clock_in(interaction: discord.Interaction, back: bool = False):
             'onMeeting': False
         })
         user = next((user for user in user_data if user['id'] == user_id), None)
+        print(user)
 
-    print(user_data)
     if user:
+        print(user)
         if not back:
             user['clockTime'] = 0
 
@@ -104,14 +72,13 @@ async def clock_in(interaction: discord.Interaction, back: bool = False):
             user['onMeeting'] = False
 
         user['isClockedIn'] = True
-        socketio.emit('update', {'message': f'{user_name} has clocked in.'})
+        socketio.emit('update', {'message': f'{user_name} has clocked in.'}) # type: ignore
 
         while user['isClockedIn']:
-            # print_user_times()
             await asyncio.sleep(1)
             if user['isClockedIn']:
                 user['clockTime'] += 1
-                socketio.emit('update', {'message': f'{user_name}\'s time updated.'})
+                socketio.emit('update', {'message': f'{user_name}\'s time updated.'}) # type: ignore
 
 async def clock_out(interaction: discord.Interaction, log: bool = False):
     global data
@@ -124,21 +91,21 @@ async def clock_out(interaction: discord.Interaction, log: bool = False):
     day = today.day
 
     clockTime: int = user['clockTime']
-    hours = get_clock_hours(clockTime)
-    minutes = get_clock_minutes(clockTime)
+    hours = clock_str.get_clock_hours(clockTime)
+    minutes = clock_str.get_clock_minutes(clockTime)
 
     meetingTime: int = user['meetingTime']
-    meetingHours = get_clock_hours(meetingTime)
-    meetingMinutes = get_clock_minutes(meetingTime)
+    meetingHours = clock_str.get_clock_hours(meetingTime)
+    meetingMinutes = clock_str.get_clock_minutes(meetingTime)
 
     breakTime: int = user['breakTime']
-    breakHours = get_clock_hours(breakTime)
-    breakMinutes = get_clock_minutes(breakTime)
+    breakHours = clock_str.get_clock_hours(breakTime)
+    breakMinutes = clock_str.get_clock_minutes(breakTime)
 
     totalTime = clockTime + meetingTime
     weekTime = totalTime
-    weekHours = get_clock_hours(weekTime)
-    weekTimeStr = get_clock_time(weekTime)
+    weekHours = clock_str.get_clock_hours(weekTime)
+    weekTimeStr = clock_str.get_clock_time(weekTime)
     totalTimeStr = weekTimeStr
 
     weekDay = (day - 1) // 7
@@ -150,7 +117,7 @@ async def clock_out(interaction: discord.Interaction, log: bool = False):
             weeks[i] = weekTimeStr
             break
 
-    server = next((server for server in data if server['id'] == interaction.guild_id), None)
+    server = next((server for server in get_data() if server['id'] == interaction.guild_id), None)
 
     if log:
         if server:
@@ -182,11 +149,11 @@ async def clock_out(interaction: discord.Interaction, log: bool = False):
                             existingHours, existingMinutes = map(int, existingWeeks[i].split(';'))
                             newTime = (existingHours * (60 * 60)) + (existingMinutes * 60)
                             totalTime += newTime
-                            totalTimeStr = get_clock_time(totalTime)
+                            totalTimeStr = clock_str.get_clock_time(totalTime)
 
                             weeks[i] = existingWeeks[i]
                             if weekDay == i:
-                                weekTimeStr = get_clock_time(weekTime + newTime)
+                                weekTimeStr = clock_str.get_clock_time(weekTime + newTime)
 
                                 weeks[i] = weekTimeStr
 
@@ -202,7 +169,7 @@ async def clock_out(interaction: discord.Interaction, log: bool = False):
                         await get(sheet_url_str)
                     except Exception as e:
                         print(f'Error while patching data: {e}')
-            socketio.emit('update', {'message': f'{interaction.user.display_name} has clocked out.'})
+            socketio.emit('update', {'message': f'{interaction.user.display_name} has clocked out.'}) # type: ignore
     return f'{today.strftime('%A %m/%d/%Y')} - {interaction.user.mention} worked a total of {weekHours} hours; Business time of {hours} hours and {minutes} minutes, and meeting time of {meetingHours} hours and {meetingMinutes} minutes.\n{interaction.user.mention} also took a break of {breakHours} hours and {breakMinutes} minutes.'
 
 async def meeting_in(interaction: discord.Interaction):
@@ -215,14 +182,13 @@ async def meeting_in(interaction: discord.Interaction):
     user['isClockedIn'] = False
     user['onBreak'] = False
     user['onMeeting'] = True
-    socketio.emit('update', {'message': f'{interaction.user.display_name} went on a meeting.'})
+    socketio.emit('update', {'message': f'{interaction.user.display_name} went on a meeting.'}) # type: ignore
 
     while user['onMeeting']:
-        # print_user_times()
         await asyncio.sleep(1)
         if user['onMeeting']:
             user['meetingTime'] += 1
-            socketio.emit('update', {'message': f'{user_name}\'s time updated.'})
+            socketio.emit('update', {'message': f'{user_name}\'s time updated.'}) # type: ignore
 
 async def break_in(_user: discord.Member, interaction: discord.Interaction):
     global break_time_limit, part_break_time_limit
@@ -235,11 +201,11 @@ async def break_in(_user: discord.Member, interaction: discord.Interaction):
     user['isClockedIn'] = False
     user['onMeeting'] = False
     user['onBreak'] = True
-    socketio.emit('update', {'message': f'{interaction.user.display_name} went on a break.'})
+    socketio.emit('update', {'message': f'{interaction.user.display_name} went on a break.'}) # type: ignore
 
     break_limit = break_time_limit
 
-    server = next((server for server in data if server['id'] == interaction.guild_id), None)
+    server = next((server for server in get_data() if server['id'] == interaction.guild_id), None)
 
     if server:
         if interaction.guild:
@@ -260,11 +226,10 @@ async def break_in(_user: discord.Member, interaction: discord.Interaction):
             print(f'Error while sending message to {user.display_name}: {e}')
 
     while user['onBreak']:
-        # print_user_times()
         await asyncio.sleep(1)
         if user['onBreak']:
             user['breakTime'] += 1
-            socketio.emit('update', {'message': f'{user_name}\'s time updated.'})
+            socketio.emit('update', {'message': f'{user_name}\'s time updated.'}) # type: ignore
 
         if user['breakTime'] == break_time_warning:
             await send_dm(_user, f'{_user.mention}, you have 2 minutes left on your break.')
@@ -280,14 +245,14 @@ async def view_time(interaction: discord.Interaction):
         return no_interaction_message
 
     clock: int = user['clockTime']
-    hours = get_clock_hours(clock)
-    minutes = get_clock_minutes(clock)
-    seconds = get_clock_seconds(clock)
+    hours = clock_str.get_clock_hours(clock)
+    minutes = clock_str.get_clock_minutes(clock)
+    seconds = clock_str.get_clock_seconds(clock)
     return f'You have worked {hours} hours, {minutes} minutes and {seconds} seconds.'
 
 
 async def check_role(interaction: discord.Interaction):
-    server = next((server for server in data if server['id'] == interaction.guild_id))
+    server = next((server for server in get_data() if server['id'] == interaction.guild_id))
     if server:
         agent_id = int(server['roleId'])
         if interaction.guild:
@@ -308,7 +273,7 @@ class ClockInView(discord.ui.View):
 
     # Clock In
     @discord.ui.button(label='Clock In', style=discord.ButtonStyle.green, emoji='⏰')
-    async def clock_in(self, interaction: discord.Interaction, button: discord.ui.Button[discord.ui.View]):
+    async def clock_in_view(self, interaction: discord.Interaction, button: discord.ui.Button[discord.ui.View]):
         await interaction.response.defer()
         user_id = interaction.user.id
 
@@ -322,7 +287,7 @@ class ClockInView(discord.ui.View):
                     await interaction.followup.send('You can\'t reset your time once you\'re already clocked in.', ephemeral=True)
                     return
 
-            server = next((server for server in data if server['id'] == interaction.guild_id))
+            server = next((server for server in get_data() if server['id'] == interaction.guild_id))
             if server:
                 log_id = int(server['logId'])
                 if interaction.guild:
@@ -344,7 +309,7 @@ class ClockInView(discord.ui.View):
 
     #Clock Out
     @discord.ui.button(label='Clock Out', style=discord.ButtonStyle.red, emoji='🛑')
-    async def clock_out(self, interaction: discord.Interaction, button: discord.ui.Button[discord.ui.View]):
+    async def clock_out_view(self, interaction: discord.Interaction, button: discord.ui.Button[discord.ui.View]):
         global user_data
 
         await interaction.response.defer()
@@ -358,7 +323,7 @@ class ClockInView(discord.ui.View):
                 if not user['isClockedIn']:
                     out_response = 'You are not clocked in.'
                 else:
-                    server = next((server for server in data if server['id'] == interaction.guild_id))
+                    server = next((server for server in get_data() if server['id'] == interaction.guild_id))
                     if server:
                         log_id = int(server['logId'])
                         if interaction.guild:
@@ -404,7 +369,7 @@ class ClockInView(discord.ui.View):
 
     #Clock Break
     @discord.ui.button(label='Break', style=discord.ButtonStyle.blurple, emoji='🍔')
-    async def clock_break(self, interaction: discord.Interaction, button: discord.ui.Button[discord.ui.View]):
+    async def clock_break_view(self, interaction: discord.Interaction, button: discord.ui.Button[discord.ui.View]):
         await interaction.response.defer()
         user_id = interaction.user.id
 
@@ -420,7 +385,7 @@ class ClockInView(discord.ui.View):
                         await interaction.followup.send('You are already on break.', ephemeral=True)
                 else:
                     await interaction.followup.send('You are now on break.', ephemeral=True)
-                    server = next((server for server in data if server['id'] == interaction.guild_id), None)
+                    server = next((server for server in get_data() if server['id'] == interaction.guild_id), None)
                     if server:
                         log_id = int(server['logId'])
                         if interaction.guild:
@@ -448,7 +413,7 @@ class ClockInView(discord.ui.View):
 
     #Clock Back
     @discord.ui.button(label='Clock Back', style=discord.ButtonStyle.grey, emoji='🔄')
-    async def clock_back(self, interaction: discord.Interaction, button: discord.ui.Button[discord.ui.View]):
+    async def clock_back_view(self, interaction: discord.Interaction, button: discord.ui.Button[discord.ui.View]):
         await interaction.response.defer()
         user_id = interaction.user.id
 
@@ -462,7 +427,7 @@ class ClockInView(discord.ui.View):
                 else:
                     back_response = 'You are not clocked in.'
 
-                server = next((server for server in data if server['id'] == interaction.guild_id), None)
+                server = next((server for server in get_data() if server['id'] == interaction.guild_id), None)
                 if server:
                     log_id = int(server['logId'])
                     if interaction.guild:
@@ -470,12 +435,12 @@ class ClockInView(discord.ui.View):
                         if isinstance(log_channel, discord.TextChannel):
                             if user['clockTime'] > 1 and not user['isClockedIn']:
                                 meeting_time: int = user['meetingTime']
-                                meeting_hours = get_clock_hours(meeting_time)
-                                meeting_minutes = get_clock_minutes(meeting_time)
+                                meeting_hours = clock_str.get_clock_hours(meeting_time)
+                                meeting_minutes = clock_str.get_clock_minutes(meeting_time)
 
                                 break_time: int = user['breakTime']
-                                break_hours = get_clock_hours(break_time)
-                                break_minutes = get_clock_minutes(break_time)
+                                break_hours = clock_str.get_clock_hours(break_time)
+                                break_minutes = clock_str.get_clock_minutes(break_time)
                                 desc = f'{interaction.user.mention} is now back in from a meeting of {meeting_hours}h {meeting_minutes}m.' if user['onMeeting'] else f'{interaction.user.mention} is now back in from a break of {break_hours}h {break_minutes}m.' if user['onBreak'] else f'{interaction.user.mention} is now back in.'
                                 embed = discord.Embed(title='Back in', description=desc, color=discord.Color.light_gray())
                                 await log_channel.send(embed=embed)
@@ -508,7 +473,7 @@ class ClockInView(discord.ui.View):
 
     #View Time
     @discord.ui.button(label='View Your Time', style=discord.ButtonStyle.gray, emoji='🕰️')
-    async def view_time(self, interaction: discord.Interaction, button: discord.ui.Button[discord.ui.View]):
+    async def view_time_view(self, interaction: discord.Interaction, button: discord.ui.Button[discord.ui.View]):
         await interaction.response.defer()
         user_id = interaction.user.id
 
@@ -522,7 +487,7 @@ class ClockInView(discord.ui.View):
 
     #Meeting Start
     @discord.ui.button(label='Meeting In', style=discord.ButtonStyle.green, emoji='📅')
-    async def start_meeting(self, interaction: discord.Interaction, button: discord.ui.Button[discord.ui.View]):
+    async def start_meeting_view(self, interaction: discord.Interaction, button: discord.ui.Button[discord.ui.View]):
         await interaction.response.defer()
         user_id = interaction.user.id
 
@@ -532,7 +497,7 @@ class ClockInView(discord.ui.View):
                 if user['isClockedIn']:
                     embed = discord.Embed(title='In meeting', description=f'{interaction.user.mention} is in a meeting.', color=discord.Color.green())
                     if interaction.guild:
-                        server = next((server for server in data if server['id'] == interaction.guild.id), None)
+                        server = next((server for server in get_data() if server['id'] == interaction.guild.id), None)
                         if server:
                             log_id = int(server['logId'])
                             log_channel = interaction.guild.get_channel(log_id)
@@ -563,7 +528,7 @@ async def clock(channel: discord.TextChannel, interaction: discord.Interaction):
     view = ClockInView()
     message = await channel.send(embed=embed, view=view)
 
-    server = next((server for server in data if server['id'] == channel.guild.id), None)
+    server = next((server for server in get_data() if server['id'] == channel.guild.id), None)
     if server:
         if interaction.guild:
             channel_id = int(server['clockId'])
@@ -576,18 +541,18 @@ async def clock(channel: discord.TextChannel, interaction: discord.Interaction):
                         await clock_message.delete()
                         clock_message = message
             server['messageId'] = message.id
-            await save_data()
+            await save_data('modules/data.json')
 
 @bot.event
 async def on_ready():
     global data
 
-    await read_data()
+    await read_data('modules/data.json')
 
     print(f'We have logged in as {bot.user}')
 
     for guild in bot.guilds:
-        server = next((server for server in data if server['id'] == guild.id), None)
+        server = next((server for server in get_data() if server['id'] == guild.id), None)
         print(server)
 
         if server:
@@ -611,11 +576,9 @@ async def on_ready():
                     if clock_message:
                         await clock_message.edit(view=ClockInView())
         else:
-            data.append({
+            await add_data({
                 'id': guild.id
-            })
-            await save_data()
-
+            }, 'modules/data.json')
     try:
         synced = await bot.tree.sync()
         print(f'Synced {len(synced)} commands.')
@@ -625,7 +588,7 @@ async def on_ready():
 @bot.tree.command(name='setup', description='Sets up the clock app')
 async def setup(interaction: discord.Interaction, channel: discord.TextChannel, role: discord.Role, logs: discord.TextChannel, sheet_url: str, clock_role: Optional[discord.Role] = None, break_role: Optional[discord.Role] = None, meeting_role: Optional[discord.Role] = None, part_role: Optional[discord.Role] = None):
     if interaction.guild:
-        server = next((server for server in data if server['id'] == interaction.guild.id), None)
+        server = next((server for server in get_data() if server['id'] == interaction.guild.id), None)
         if server:
             setupPermRoleId = server.get('setupPermRoleId')
             if setupPermRoleId:
@@ -653,13 +616,13 @@ async def setup(interaction: discord.Interaction, channel: discord.TextChannel, 
             set_role(meeting_role, 'meetingRoleId')
             set_role(part_role, 'partRoleId')
 
-            await save_data()
+            await save_data('modules/data.json')
 
     await interaction.response.send_message(f'Clock app set up in {channel.mention}\nLogs channel set up in {logs.mention}\nUsers who can access the app need to have the {role.mention} role.', ephemeral=True)
     await clock(channel, interaction)
 
 def run_flask():
-    socketio.run(app)
+    socketio.run(app) # type: ignore
 
 async def main():
     flask_thread = threading.Thread(target=run_flask)

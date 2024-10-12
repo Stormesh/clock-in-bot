@@ -1,6 +1,6 @@
 # Discord Clock-In Bot
 
-This Discord bot helps monitor users' clock-in, break, and meeting statuses in real-time. The bot tracks user activity, allowing for effective time management and easy monitoring of current statuses.
+This Discord bot helps in monitoring users' clock-in, break, and meeting statuses in real-time. The bot tracks user activity, allowing for effective time management and easy monitoring of current statuses.
 
 ## Features
 
