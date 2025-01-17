@@ -34,32 +34,33 @@ const ClockCard: FC<UserProps> = ({
     return `${setZeros(hours)}:${setZeros(minutes)}:${setZeros(seconds)}`;
   };
 
-  const showEffect = (effect: boolean, emoji: string) => {
-    return effect ? <span className={styles.onEffect}>{emoji}</span> : null;
-  }
-
   const timeElement = (time: number, effect: boolean, emoji: string) => {
     return (
-      <td className={styles.clockTime}>
+      <td className="text-violet-200 font-mono">
         {timeFormat(time)}
-        {showEffect(effect, emoji)}
+        <span
+          className={effect ? styles.onEffect : "hidden"}
+          aria-hidden={!effect}
+        >
+          {emoji}
+        </span>
       </td>
     );
-  }
+  };
 
   return (
-    <tr>
+    <tr className="bg-cardBg even:bg-[#3b3553] border-2 border-tableBorder">
       <td>
-        <div>
+        <div className="mx-3 my-1">
           <Image
-            className={styles.userAvatar}
+            className="rounded-full place-self-center m-1 hover:scale-110 transition-transform"
             src={avatar}
             alt={name}
             width={100}
             height={100}
           />
+          <p className="text-violet-300 font-sans font-light">{name}</p>
         </div>
-        <span className={styles.userName}>{name}</span>
       </td>
       {timeElement(clockTime, isClockedIn, "🕒")}
       {timeElement(meetingTime, onMeeting, "📅")}

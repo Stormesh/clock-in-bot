@@ -13,7 +13,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>
+      <body className="bg-gradient-to-tr bg-fixed from-[#151216] to-[#4d3e66]">
         {children}
       </body>
     </html>

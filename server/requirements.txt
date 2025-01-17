@@ -7,3 +7,4 @@ toml
 Flask
 Flask-Cors
 Flask-SocketIO
+eventlet

@@ -1,0 +1,34 @@
+name: clockin-bot
+services:
+  db:
+    image: mongo:latest
+    container_name: clock-mongodb
+    ports:
+      - 27016:27017
+    volumes:
+      - db-data:/data/db
+  web:
+    depends_on:
+      - db
+    build: ./client
+    container_name: clock-web
+    environment:
+      NODE_ENV: production
+      AUTH_SECRET: 5eltSdUyaCy6xOAw1y5rtDzdlagaDN5mAkC4C3OfQ5Q= # Added by `npx auth`. Read more: https://cli.authjs.dev
+      AUTH_TRUST_HOST: true
+      BETTER_AUTH_SECRET: SQLpMieKxVYU6CckQwsEDMZJIpcq39tw
+      BETTER_AUTH_URL: http://localhost:3000 #Base URL of your app
+      NEXT_PUBLIC_BASE_URL: http://localhost:3000
+      MONGODB_URI: mongodb://db/clock
+      NEXT_PUBLIC_DISCORD_BOT_URL: http://localhost:8000
+    ports:
+      - 3000:3000
+  server:
+    build: ./server
+    container_name: clock-discord
+    env_file:
+      - ./server/.env
+    ports:
+      - 8000:8000
+volumes:
+  db-data:

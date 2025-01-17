@@ -1,0 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.table-header {
+  @apply font-sans text-violet-100 px-5 py-3 border-2 border-tableBorder bg-[#3a3252] shadow-inner shadow-black;
+}
