@@ -31,7 +31,7 @@ from typing import Optional
 load_dotenv()
 BOT_TOKEN = os.getenv('BOT_TOKEN', '')
 FLASK_HOST = os.getenv('FLASK_HOST', '0.0.0.0')
-FLASK_PORT = os.getenv('FLASK_PORT', 8000)
+FLASK_PORT = os.getenv('FLASK_PORT', 7546)
 
 intents = discord.Intents.default()
 intents.members = True
