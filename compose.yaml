@@ -25,6 +25,6 @@ services:
     env_file:
       - ./server/.env
     ports:
-      - 8000:8000
+      - 7546:7546
 volumes:
   db-data:
