@@ -17,7 +17,7 @@ const UserPanel = async () => {
           session?.user?.roleId.permissions?.includes("sign-up") && (
             <Link
               href="/signup"
-              className="inline-block bg-fuchsia-900 mx-2 hover:bg-fuchsia-500 hover:scale-110 transition-all duration-300 text-white font-bold py-2 px-4 rounded mt-4"
+              className="inline-block bg-fuchsia-900 mx-2 hover:bg-fuchsia-500 hover:scale-110 transition-all duration-300 text-white font-bold py-2 px-4 rounded mt-4 select-none"
             >
               Sign up
             </Link>
@@ -29,7 +29,7 @@ const UserPanel = async () => {
           ) && (
             <Link
               href="/secretpanel"
-              className="bg-blue-900 mx-2 hover:bg-blue-500 hover:scale-110 transition-all duration-300 text-white font-bold py-2 px-4 rounded mt-4"
+              className="bg-blue-900 mx-2 hover:bg-blue-500 hover:scale-110 transition-all duration-300 text-white font-bold py-2 px-4 rounded mt-4 select-none"
             >
               Admin
             </Link>

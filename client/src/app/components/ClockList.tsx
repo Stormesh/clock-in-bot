@@ -16,7 +16,7 @@ if (!DISCORD_BOT_URL) {
 const url = DISCORD_BOT_URL;
 const socket = io(url);
 
-interface User {
+interface IUser {
   id: number;
   name: string;
   avatar: string;
@@ -29,7 +29,7 @@ interface User {
 }
 
 const ClockList: FC = () => {
-  const [userData, setUserData] = useState<User[]>([]);
+  const [userData, setUserData] = useState<IUser[]>([]);
 
   const updateTime = (userId: number) => {
     setUserData((prevUserData) =>

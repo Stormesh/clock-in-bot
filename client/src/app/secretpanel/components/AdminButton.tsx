@@ -1,13 +1,13 @@
 import React, { FC } from "react";
 
-interface ButtonProps {
+interface IButtonProps {
     bgColor: string;
     hoverColor: string;
     text: string;
     clickEvent: () => void;
 }
 
-const AdminButton:FC<ButtonProps> = ({bgColor, hoverColor, text, clickEvent}) => {
+const AdminButton:FC<IButtonProps> = ({bgColor, hoverColor, text, clickEvent}) => {
   return (
     <button
       onClick={() => clickEvent}

@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import InputField from "../../login/components/InputField";
-// import { useSession } from "@/src/auth-client";
 import Link from "next/link";
 
 const Signup = () => {
@@ -64,21 +63,11 @@ const Signup = () => {
     }
   };
 
-  // if (!session?.user?.roleId.permissions?.includes("sign-up")) {
-  //   return (
-  //     <Warning
-  //       text="You do not have permission to access this page"
-  //       link="/"
-  //       linkText="Go back"
-  //     />
-  //   );
-  // }
-
   return (
     <div className="flex justify-center items-center h-screen">
       <form
         onSubmit={handleFormSubmit}
-        className="flex flex-col justify-center items-center place-self-center rounded-lg bg-cardBg p-5 text-white"
+        className="flex flex-col justify-center items-center place-self-center rounded-lg bg-card-bg p-5 text-white"
       >
         <h1 className="text-3xl font-bold mb-3">Create a new account</h1>
         <InputField
@@ -86,14 +75,16 @@ const Signup = () => {
           labelText="Username"
           placeholder="Username"
           type="text"
+          grid
         />
         <InputField
           name="password"
           labelText="Password"
           placeholder="Password"
           type="password"
+          grid
         />
-        <InputField name="role" labelText="Role" select={["User", "Admin"]} />
+        <InputField name="role" labelText="Role" select={["User", "Admin"]} grid />
         {indicator !== indicatorState.none && (
           <h3
             className={`text-xl ${
@@ -107,14 +98,14 @@ const Signup = () => {
         )}
         <div>
           <button
-            className="bg-green-700 hover:bg-green-500 font-sans p-2 text-xl m-3 rounded-lg hover:scale-110 transition-all duration-300"
+            className="bg-green-700 hover:bg-green-500 font-sans p-2 text-xl m-3 rounded-lg hover:scale-110 transition-all duration-300 cursor-pointer"
             type="submit"
           >
             Sign up
           </button>
           <Link
             href="/"
-            className="inline-block bg-red-700 hover:bg-red-500 font-sans p-2 text-xl m-3 rounded-lg hover:scale-110 transition-all duration-300"
+            className="inline-block bg-red-700 hover:bg-red-500 font-sans p-2 text-xl m-3 rounded-lg hover:scale-110 transition-all duration-300 select-none"
           >
             Go back
           </Link>

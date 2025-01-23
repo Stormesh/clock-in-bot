@@ -64,7 +64,7 @@ const page = async () => {
     <div className="flex flex-col justify-center items-center h-screen">
       <UsersTable users={filteredUsers} />
       <Link className="m-2" href="/">
-        <button className="bg-green-700 hover:bg-green-500 hover:scale-105 transition-all p-2 font-bold rounded-lg text-white">
+        <button className="bg-green-700 hover:bg-green-500 hover:scale-105 transition-all p-2 font-bold rounded-lg text-white cursor-pointer">
           Go back
         </button>
       </Link>

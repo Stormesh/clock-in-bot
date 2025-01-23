@@ -1,9 +1,10 @@
 import React, { FC } from "react";
 
-interface InputFieldProps {
+interface IInputFieldProps {
   name: string;
   labelText?: string;
   select?: string[];
+  grid?: boolean;
   defaultValue?: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
   value?: string;
@@ -11,10 +12,11 @@ interface InputFieldProps {
   type?: string;
 }
 
-const InputField: FC<InputFieldProps> = ({
+const InputField: FC<IInputFieldProps> = ({
   name,
   labelText,
   select = [],
+  grid = false,
   defaultValue,
   onChange,
   value,
@@ -22,7 +24,7 @@ const InputField: FC<InputFieldProps> = ({
   type,
 }) => {
   return (
-    <div className="flex justify-center text-lg items-center m-2">
+    <div className={`${grid ? "grid grid-cols-2 w-72" : "flex"} justify-center text-lg items-center m-2`}>
       {labelText && (
         <label className="text-center block font-bold mr-2" htmlFor={name}>
           {labelText}

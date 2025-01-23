@@ -39,7 +39,7 @@ const SignOutButton = () => {
         alert={alert}
       />
       <button
-        className="bg-pink-900 mx-2 hover:bg-pink-500 hover:scale-110 transition-all duration-300 text-white font-bold py-2 px-4 rounded mt-4"
+        className="bg-pink-900 mx-2 hover:bg-pink-500 hover:scale-110 transition-all duration-300 text-white font-bold py-2 px-4 rounded mt-4 cursor-pointer"
         onClick={() => handleSignOut()}
       >
         Sign out

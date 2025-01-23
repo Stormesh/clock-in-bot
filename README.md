@@ -17,6 +17,7 @@ This Discord bot helps in monitoring users' clock-in, break, and meeting statuse
 
 - Python 3.x
 - Node.js
+- Docker (optional)
 
 ### Installation
 
@@ -67,7 +68,6 @@ This Discord bot helps in monitoring users' clock-in, break, and meeting statuse
     npm install # To install dependencies
     npm run dev # To start the Next.js app
     ```
-    ```bash
    - Visit `http://localhost:3000` to see the web app in action.
    - The Flask server will send user data to the Next.js app for real-time monitoring.
    - You can customize the web app to suit your needs.
@@ -85,7 +85,7 @@ This Discord bot helps in monitoring users' clock-in, break, and meeting statuse
 
 3. **Meeting Status**
 
-   - Users can set their status to `In a Meeting` by pressing the `Meeting In` button.
+   - Users can set their status to `In a Meeting` by pressing the `Meeting` button.
    - Users can set their status to `Not in a Meeting` by pressing the `Clock Back` button.
 
 4. **Real-Time Monitoring**
@@ -97,7 +97,6 @@ This Discord bot helps in monitoring users' clock-in, break, and meeting statuse
 
 - Add tabs for different user groups to monitor their activity.
 - Add a system to track users when they are actively monitoring the dashboard + check how many IPs are logged into this user's account.
-- 
 
 
 ## Contributing

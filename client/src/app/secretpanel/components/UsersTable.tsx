@@ -7,11 +7,11 @@ import { PopulatedUser } from "../../lib/models";
 
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
 
-interface UsersTableProps {
+interface IUsersTableProps {
   users: PopulatedUser[];
 }
 
-const UsersTable: FC<UsersTableProps> = ({ users }) => {
+const UsersTable: FC<IUsersTableProps> = ({ users }) => {
   const [usersList, setUsersList] = useState<PopulatedUser[]>(users);
   const [value, setValue] = useState(users.map((user) => user.roleId.name));
   const [alert, setAlert] = useState({
@@ -145,14 +145,14 @@ const UsersTable: FC<UsersTableProps> = ({ users }) => {
       <table className="text-xl text-white">
         <thead className="table-header">
           <tr>
-            <th className="border-tableBorder border-2 p-1">Username</th>
-            <th className="border-2 border-tableBorder p-1">Role</th>
-            <th className="border-tableBorder border-2 p-1">Options</th>
+            <th className="border-table-border border-2 p-1">Username</th>
+            <th className="border-2 border-table-border p-1">Role</th>
+            <th className="border-table-border border-2 p-1">Options</th>
           </tr>
         </thead>
-        <tbody className="bg-cardBg border-2 border-tableBorder">
+        <tbody className="bg-card-bg border-2 border-table-border">
           {usersList.map((user, index) => (
-            <tr className="border-2 border-tableBorder" key={user._id}>
+            <tr className="border-2 border-table-border" key={user._id}>
               <td className="p-1">{user.username}</td>
               <td>
                 <InputField
@@ -165,13 +165,13 @@ const UsersTable: FC<UsersTableProps> = ({ users }) => {
               <td className="select-none">
                 <button
                   onClick={() => handleUpdateUser(user._id, value[index])}
-                  className={`bg-green-800 hover:bg-green-600 hover:scale-95 font-bold transition-all rounded-lg p-1 m-1`}
+                  className={`bg-green-800 hover:bg-green-600 hover:scale-95 font-bold transition-all rounded-lg p-1 m-1 cursor-pointer`}
                 >
                   Update
                 </button>
                 <button
                   onClick={() => handleDeleteUser(user._id)}
-                  className={`bg-red-800 hover:bg-red-600 hover:scale-95 font-bold transition-all rounded-lg p-1 m-1`}
+                  className={`bg-red-800 hover:bg-red-600 hover:scale-95 font-bold transition-all rounded-lg p-1 m-1 cursor-pointer`}
                 >
                   Delete
                 </button>

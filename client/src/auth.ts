@@ -82,31 +82,3 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
   },
 });
-
-//Better Auth
-// import { betterAuth } from "better-auth";
-// import { mongodbAdapter } from "better-auth/adapters/mongodb";
-// import { username } from "better-auth/plugins";
-// import { mongo } from "mongoose";
-
-// if (!process.env.MONGODB_URI) {
-//   throw new Error("Missing MONGODB_URI environment variable");
-// }
-
-// const authClient = new mongo.MongoClient(process.env.MONGODB_URI);
-
-// const db = authClient.db();
-
-// export const auth = betterAuth({
-//   secret: process.env.BETTER_AUTH_SECRET,
-//   database: mongodbAdapter(db),
-//   plugins: [username()],
-//   user: {
-//     additionalFields: {
-//       role: {
-//         type: "string",
-//         defaultValue: "user",
-//       },
-//     },
-//   },
-// });

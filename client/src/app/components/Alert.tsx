@@ -1,7 +1,7 @@
 import React, { FC } from "react";
 import AlertButton from "./AlertButton";
 
-interface AlertProps {
+interface IAlertProps {
   text: string;
   onConfirm: () => void;
   onDismiss: () => void;
@@ -12,10 +12,10 @@ interface AlertProps {
   };
 }
 
-const Alert: FC<AlertProps> = ({ text, onConfirm, onDismiss, alert }) => {
+const Alert: FC<IAlertProps> = ({ text, onConfirm, onDismiss, alert }) => {
   return (
     <div
-      className={`w-full h-full bg-black bg-opacity-25 fixed z-10 top-0 left-0 transition-opacity justify-center items-center ${
+      className={`w-full h-full bg-black/25 fixed z-10 top-0 left-0 transition-opacity justify-center items-center ${
         alert.show ? "flex" : "hidden"
       }`}
       aria-hidden={!alert.show}

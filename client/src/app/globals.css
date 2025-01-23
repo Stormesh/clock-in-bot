@@ -1,7 +1,10 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --color-table-border: #5c517d;
+  --color-card-bg: #221d33;
+}
 
 .table-header {
-  @apply font-sans text-violet-100 px-5 py-3 border-2 border-tableBorder bg-[#3a3252] shadow-inner shadow-black;
+  @apply font-sans text-violet-100 px-5 py-3 border-2 border-table-border bg-[#3a3252] shadow-inner shadow-black;
 }

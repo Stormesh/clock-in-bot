@@ -2,9 +2,8 @@ import discord
 import asyncio
 import datetime
 import modules.clock_str as clock_str
-from modules.dis_data import get_data
 from modules.rest import get, post, patch
-from modules.user_data import user_data
+from modules.general_data import user_data, get_user, get_server
 import math
 import modules.config as config
 import modules.socket as socket
@@ -15,7 +14,7 @@ async def clock_in(interaction: discord.Interaction, back: bool = False):
     user_id = interaction.user.id
     user_name = interaction.user.display_name
 
-    user = next((user for user in user_data if user['id'] == user_id), None)
+    user = get_user(user_id)
     if not user:
         user_data.append({
             'id': user_id,
@@ -28,61 +27,79 @@ async def clock_in(interaction: discord.Interaction, back: bool = False):
             'onBreak': False,
             'onMeeting': False
         })
-        user = next((user for user in user_data if user['id'] == user_id), None)
+        user = get_user(user_id)
 
-    if user:
-        if not back:
-            user['clockTime'] = 0
+    if not user:
+        return
 
-        if user['onBreak'] or user['onMeeting']:
-            user['onBreak'] = False
-            user['onMeeting'] = False
+    if not back:
+        user['clockTime'] = 0
 
-        user['isClockedIn'] = True
-        sio.emit('update', {'message': f'{user_name} has clocked in.'}) # type: ignore
+    if user['onBreak'] or user['onMeeting']:
+        user['onBreak'] = False
+        user['onMeeting'] = False
 
-        while user['isClockedIn']:
-            await asyncio.sleep(1)
-            if user['isClockedIn']:
-                user['clockTime'] += 1
+    user['isClockedIn'] = True
+    sio.emit('update', {'message': f'{user_name} has clocked in.'}) # type: ignore
+
+    while user['isClockedIn']:
+        await asyncio.sleep(1)
+        if user['isClockedIn']:
+            user['clockTime'] += 1
 
 async def clock_out(interaction: discord.Interaction, log: bool = False):
     user_id = interaction.user.id
-    user = next((user for user in user_data if user['id'] == user_id), None)
+    user = get_user(user_id)
     if not user:
         return config.no_interaction_message
 
     today = datetime.date.today()
     day = today.day
 
-    clockTime: int = user['clockTime']
-    hours = clock_str.get_clock_hours(clockTime)
-    minutes = clock_str.get_clock_minutes(clockTime)
+    clock_time: int = user['clockTime']
+    hours = clock_str.get_clock_hours(clock_time)
+    minutes = clock_str.get_clock_minutes(clock_time)
 
-    meetingTime: int = user['meetingTime']
-    meetingHours = clock_str.get_clock_hours(meetingTime)
-    meetingMinutes = clock_str.get_clock_minutes(meetingTime)
+    meeting_time: int = user['meetingTime']
+    meeting_hours = clock_str.get_clock_hours(meeting_time)
+    meeting_minutes = clock_str.get_clock_minutes(meeting_time)
 
-    breakTime: int = user['breakTime']
-    breakHours = clock_str.get_clock_hours(breakTime)
-    breakMinutes = clock_str.get_clock_minutes(breakTime)
+    break_time: int = user['breakTime']
+    break_hours = clock_str.get_clock_hours(break_time)
+    break_minutes = clock_str.get_clock_minutes(break_time)
 
-    totalTime = clockTime + meetingTime
-    weekTime = totalTime
-    weekHours = clock_str.get_clock_hours(weekTime)
-    weekTimeStr = clock_str.get_clock_time(weekTime)
-    totalTimeStr = weekTimeStr
+    total_time = clock_time + meeting_time
+    week_time = total_time
+    week_time_str = clock_str.get_clock_time(week_time)
+    total_time_str = week_time_str
 
-    weekDay = (day - 1) // 7
+    week_day = (day - 1) // 7
     weeks: list[str] = [f'00;00' for _ in range(4)]
-    if weekDay > 3:
-        weekDay = 3
+    if week_day > 3:
+        week_day = 3
     for i in range(4):
-        if weekDay == i:
-            weeks[i] = weekTimeStr
+        if week_day == i:
+            weeks[i] = week_time_str
             break
 
-    server = next((server for server in get_data() if server['id'] == interaction.guild_id), None)
+    server = get_server(interaction.guild_id)
+    
+    clock_out_data_message = config.clock_out_data_message.format(
+        date=today.strftime('%A %m/%d/%Y'),
+        user_name=interaction.user.mention, 
+        hours=hours,
+        hours_s=clock_str.make_plural(hours),
+        minutes=minutes, 
+        minutes_s=clock_str.make_plural(minutes),
+        meeting_hours=meeting_hours, 
+        meeting_hours_s=clock_str.make_plural(meeting_hours),
+        meeting_minutes=meeting_minutes, 
+        meeting_minutes_s=clock_str.make_plural(meeting_minutes),
+        break_hours=break_hours, 
+        break_hours_s=clock_str.make_plural(break_hours),
+        break_minutes=break_minutes,
+        break_minutes_s=clock_str.make_plural(break_minutes)
+    ).replace('\\n', '\n')
 
     if log:
         if server:
@@ -90,12 +107,12 @@ async def clock_out(interaction: discord.Interaction, log: bool = False):
             if sheet_url:
                 sheet_url_str = str(sheet_url)
                 sheet = await get(sheet_url_str)
-                sheetUser = next((user for user in sheet if user.get('Agent') == interaction.user.display_name), None)
-                if not sheetUser:
+                sheet_user = next((user for user in sheet if user.get('Agent') == interaction.user.display_name), None)
+                if not sheet_user:
                     try:
                         sheet_data = {
                             'Agent': interaction.user.display_name,
-                            'Total / Missing hours': weekTimeStr,
+                            'Total / Missing hours': week_time_str,
                             'Week 1': weeks[0],
                             'Week 2': weeks[1],
                             'Week 3': weeks[2],
@@ -108,22 +125,22 @@ async def clock_out(interaction: discord.Interaction, log: bool = False):
                         print(f'Error while posting data: {e}')
                 else:
                     try:
-                        existingWeeks = [sheetUser[f'Week {i + 1}'] for i in range(4)]
+                        existing_weeks = [sheet_user[f'Week {i + 1}'] for i in range(4)]
 
                         for i in range(4):
-                            existingHours, existingMinutes = map(int, existingWeeks[i].split(';'))
-                            newTime = (existingHours * (60 * 60)) + (existingMinutes * 60)
-                            totalTime += newTime
-                            totalTimeStr = clock_str.get_clock_time(totalTime)
+                            existing_hours, existing_minutes = map(int, existing_weeks[i].split(';'))
+                            new_time = (existing_hours * (60 * 60)) + (existing_minutes * 60)
+                            total_time += new_time
+                            total_time_str = clock_str.get_clock_time(total_time)
 
-                            weeks[i] = existingWeeks[i]
-                            if weekDay == i:
-                                weekTimeStr = clock_str.get_clock_time(weekTime + newTime)
+                            weeks[i] = existing_weeks[i]
+                            if week_day == i:
+                                week_time_str = clock_str.get_clock_time(week_time + new_time)
 
-                                weeks[i] = weekTimeStr
+                                weeks[i] = week_time_str
 
                         sheet_data = {
-                            'Total / Missing hours': totalTimeStr,
+                            'Total / Missing hours': total_time_str,
                             'Week 1': weeks[0],
                             'Week 2': weeks[1],
                             'Week 3': weeks[2],
@@ -135,18 +152,18 @@ async def clock_out(interaction: discord.Interaction, log: bool = False):
                     except Exception as e:
                         print(f'Error while patching data: {e}')
             sio.emit('update', {'message': f'{interaction.user.display_name} has clocked out.'}) # type: ignore
-    return f'{today.strftime('%A %m/%d/%Y')} - {interaction.user.mention} worked a total of {weekHours} hours; Business time of {hours} hours and {minutes} minutes, and meeting time of {meetingHours} hours and {meetingMinutes} minutes.\n{interaction.user.mention} also took a break of {breakHours} hours and {breakMinutes} minutes.'
+    return clock_out_data_message
 
 async def meeting_in(interaction: discord.Interaction):
     user_id = interaction.user.id
-    user = next((user for user in user_data if user['id'] == user_id), None)
+    user = get_user(user_id)
     if not user:
         return False
 
     user['isClockedIn'] = False
     user['onBreak'] = False
     user['onMeeting'] = True
-    sio.emit('update', {'message': f'{interaction.user.display_name} went on a meeting.'}) # type: ignore
+    sio.emit('update', {'message': f'{interaction.user.display_name} went to a meeting.'}) # type: ignore
 
     while user['onMeeting']:
         await asyncio.sleep(1)
@@ -155,7 +172,7 @@ async def meeting_in(interaction: discord.Interaction):
 
 async def break_in(interaction: discord.Interaction, _user: discord.Member):
     user_id = _user.id
-    user = next((user for user in user_data if user['id'] == user_id), None)
+    user = get_user(user_id)
     if not user:
         return False
 
@@ -166,7 +183,7 @@ async def break_in(interaction: discord.Interaction, _user: discord.Member):
 
     break_limit = config.break_time_limit
 
-    server = next((server for server in get_data() if server['id'] == interaction.guild_id), None)
+    server = get_server(interaction.guild_id)
 
     if server:
         if interaction.guild:
@@ -201,21 +218,42 @@ async def break_in(interaction: discord.Interaction, _user: discord.Member):
         if message:
             await send_dm(_user, message)
 
-async def view_time(interaction: discord.Interaction):
+def view_time(interaction: discord.Interaction):
     user_id = interaction.user.id
-    user = next((user for user in user_data if user['id'] == user_id), None)
+    user = get_user(user_id)
     if not user:
         return config.no_interaction_message
 
     clock: int = user['clockTime']
-    hours = clock_str.get_clock_hours(clock)
-    minutes = clock_str.get_clock_minutes(clock)
-    seconds = clock_str.get_clock_seconds(clock)
-    return f'You have worked {hours} hours, {minutes} minutes and {seconds} seconds.'
+    meeting: int = user['meetingTime']
+    break_time: int = user['breakTime']
+    business_hours = clock_str.get_clock_hours(clock + meeting)
+    business_minutes = clock_str.get_clock_minutes(clock + meeting)
+    business_seconds = clock_str.get_clock_seconds(clock + meeting)
 
+    break_hours = clock_str.get_clock_hours(break_time)
+    break_minutes = clock_str.get_clock_minutes(break_time)
+    break_seconds = clock_str.get_clock_seconds(break_time)
+
+    view_time_message = config.view_time_message.format(
+        business_hours=business_hours,
+        business_hours_s=clock_str.make_plural(business_hours),
+        business_minutes=business_minutes,
+        business_minutes_s=clock_str.make_plural(business_minutes),
+        business_seconds=business_seconds,
+        business_seconds_s=clock_str.make_plural(business_seconds),
+        break_hours=break_hours,
+        break_hours_s=clock_str.make_plural(break_hours),
+        break_minutes=break_minutes,
+        break_minutes_s=clock_str.make_plural(break_minutes),
+        break_seconds=break_seconds,
+        break_seconds_s=clock_str.make_plural(break_seconds)
+    ).replace('\\n', '\n')
+
+    return view_time_message
 
 async def check_role(interaction: discord.Interaction):
-    server = next((server for server in get_data() if server['id'] == interaction.guild_id))
+    server = get_server(interaction.guild_id)
     if server:
         agent_id = int(server['roleId'])
         part_id = int(server['partRoleId'])
@@ -223,11 +261,11 @@ async def check_role(interaction: discord.Interaction):
             agent_role = interaction.guild.get_role(agent_id)
             part_role = interaction.guild.get_role(part_id)
             if agent_role or part_role:
-                if isinstance(interaction.user, discord.Member):
-                    if not (agent_role in interaction.user.roles or part_role in interaction.user.roles):
-                        await interaction.followup.send('You don\'t have permission to clock in.', ephemeral=True)
-                        return False
-                else:
-                    await interaction.followup.send('You don\'t have permission to clock in.', ephemeral=True)
+                if not isinstance(interaction.user, discord.Member):
+                    await interaction.followup.send(config.no_permission_clock_message, ephemeral=True)
+                    return False
+                
+                if not (agent_role in interaction.user.roles or part_role in interaction.user.roles):
+                    await interaction.followup.send(config.no_permission_clock_message, ephemeral=True)
                     return False
     return True

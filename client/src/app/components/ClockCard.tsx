@@ -2,7 +2,7 @@ import React, { FC } from "react";
 import Image from "next/image";
 import styles from "@/styles/clock.module.css";
 
-interface UserProps {
+interface IUserProps {
   name: string;
   avatar: string;
   clockTime: number;
@@ -13,7 +13,7 @@ interface UserProps {
   onMeeting: boolean;
 }
 
-const ClockCard: FC<UserProps> = ({
+const ClockCard: FC<IUserProps> = ({
   name,
   avatar,
   clockTime,
@@ -49,7 +49,7 @@ const ClockCard: FC<UserProps> = ({
   };
 
   return (
-    <tr className="bg-cardBg even:bg-[#3b3553] border-2 border-tableBorder">
+    <tr className="bg-card-bg even:bg-[#3b3553] border-2 border-table-border">
       <td>
         <div className="mx-3 my-1">
           <Image
