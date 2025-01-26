@@ -1,20 +1,19 @@
 "use client";
 
-import React, { FC, useEffect, useState } from "react";
+import React, { FC, useEffect, useRef, useState } from "react";
 import ClockCard from "./ClockCard";
 import ClockHeader from "./ClockHeader";
-import { io } from "socket.io-client";
+import { io, Socket } from "socket.io-client";
 
-const DISCORD_BOT_URL = process.env.NEXT_PUBLIC_DISCORD_BOT_URL;
+const DISCORD_BOT_URL = process.env.NEXT_PUBLIC_DISCORD_BOT_URL ?? "";
 
 if (!DISCORD_BOT_URL) {
-  throw new Error(
+  console.error(
     "Please define the DISCORD_BOT_URL environment variable inside .env.local"
   );
 }
 
 const url = DISCORD_BOT_URL;
-const socket = io(url);
 
 interface IUser {
   id: number;
@@ -30,6 +29,7 @@ interface IUser {
 
 const ClockList: FC = () => {
   const [userData, setUserData] = useState<IUser[]>([]);
+  const socket = useRef<Socket | null>(null);
 
   const updateTime = (userId: number) => {
     setUserData((prevUserData) =>
@@ -57,6 +57,16 @@ const ClockList: FC = () => {
   };
 
   useEffect(() => {
+    if (!url) return;
+    socket.current = io(url);
+    socket.current.on("update", getUserData);
+
+    return () => {
+      socket.current?.disconnect();
+    }
+  })
+
+  useEffect(() => {
     getUserData();
 
     const updateTimeOnVisibilityChange = () => {
@@ -76,11 +86,6 @@ const ClockList: FC = () => {
   }, []);
 
   useEffect(() => {
-    socket.on("update", (message) => {
-      console.log("Message from server: ", message);
-      getUserData();
-    });
-
     const timeInterval = setInterval(() => {
       userData.forEach((user) => {
         if (user.isClockedIn || user.onBreak || user.onMeeting) {
@@ -90,7 +95,6 @@ const ClockList: FC = () => {
     }, 1000);
 
     return () => {
-      socket.off("update");
       clearInterval(timeInterval);
     };
   }, [userData]);
