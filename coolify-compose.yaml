@@ -17,6 +17,11 @@ services:
       - ./client/.env.production
     environment:
       NODE_ENV: production
+      AUTH_SECRET: ${AUTH_SECRET}
+      AUTH_TRUST_HOST: ${AUTH_TRUST_HOST}
+      MONGODB_URI: ${MONGODB_URI}
+      NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL}
+      NEXT_PUBLIC_DISCORD_BOT_URL: ${NEXT_PUBLIC_DISCORD_BOT_URL}
     ports:
       - 3000:3000
   server:
