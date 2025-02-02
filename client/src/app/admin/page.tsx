@@ -1,41 +1,12 @@
 import { auth } from "@/src/auth";
 import Link from "next/link";
 import React from "react";
-import UsersTable from "./components/UsersTable";
-import { PopulatedUser } from "../lib/models";
-import Warning from "../components/Warning";
-
-const getBaseUrl = () => {
-  if (process.env.NODE_ENV === "production") {
-    return process.env.NEXT_PUBLIC_BASE_URL; // Set this in your production environment
-  }
-  return "http://localhost:3000"; // Default for development
-};
+import UsersTable from "@components/admin/UsersTable";
+import Warning from "@components/Warning";
+import { getUsersAction } from "../actions/actions";
 
 const page = async () => {
   const session = await auth();
-
-  const baseUrl = getBaseUrl();
-
-  const fetchUsers = async (): Promise<PopulatedUser[]> => {
-    try {
-      const response = await fetch(`${baseUrl}/api/users`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch users: ${response.statusText}`);
-      }
-      
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      throw new Error(`Failed to fetch users: ${error}`);
-    }
-  };
 
   if (!session?.user.roleId.permissions?.some((permission) => permission === "delete-user" || permission === "update-user")) {
     return (
@@ -48,7 +19,7 @@ const page = async () => {
   }
 
   // Fetch users
-  const users = await fetchUsers();
+  const users = await getUsersAction();
 
   const currentUser = {
     username: session?.user.name,

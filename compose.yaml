@@ -13,8 +13,9 @@ services:
     build: ./client
     container_name: clock-web
     env_file:
+      - ./client/.env
       - ./client/.env.local
-      - ./client/.env.production
+      - ./client/.env.production.local
     environment:
       NODE_ENV: production
     ports:
@@ -24,7 +25,10 @@ services:
     container_name: clock-discord
     env_file:
       - ./server/.env
+      - ./server/.env.local
     ports:
       - 7546:7546
+    # volumes:
+    #   - ./server/modules/data.json:/app/modules/data.json
 volumes:
   db-data:

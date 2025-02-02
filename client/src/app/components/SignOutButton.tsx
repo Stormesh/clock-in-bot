@@ -2,7 +2,7 @@
 
 import { signOut } from "next-auth/react";
 import React, { useState } from "react";
-import Alert from "./Alert";
+import Alert from "@components/Alert";
 
 const SignOutButton = () => {
   const [alert, setAlert] = useState({

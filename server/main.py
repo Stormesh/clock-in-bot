@@ -16,19 +16,19 @@ from modules.dis_data import read_data, save_data, add_data
 import modules.config as config
 from modules.general_data import user_data, get_server
 from modules.discord_clock import ClockInView
+from modules.env import load_env
 
 #Discord PY
 import discord
 from discord.ext import commands
 
 #Systematic imports
-from dotenv import load_dotenv
 import asyncio, os
 
 #Typing
 from typing import Optional
 
-load_dotenv()
+load_env()
 BOT_TOKEN = os.getenv('BOT_TOKEN', '')
 FLASK_HOST = os.getenv('FLASK_HOST', '0.0.0.0')
 FLASK_PORT = os.getenv('FLASK_PORT', 7546)
@@ -65,8 +65,6 @@ async def clock(channel: discord.TextChannel, interaction: discord.Interaction):
 
 @bot.event
 async def on_ready():
-    global data
-
     await read_data('modules/data.json')
 
     print(f'We have logged in as {bot.user}')

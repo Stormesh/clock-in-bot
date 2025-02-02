@@ -13,8 +13,9 @@ services:
     build: ./client
     container_name: clock-web
     env_file:
+      - ./client/.env
       - ./client/.env.local
-      - ./client/.env.production
+      - ./client/.env.production.local
     environment:
       NODE_ENV: production
       AUTH_SECRET: ${AUTH_SECRET}
@@ -29,6 +30,13 @@ services:
     container_name: clock-discord
     env_file:
       - ./server/.env
+      - ./server/.env.local
+    environment:
+      FLASK_HOST: ${FLASK_HOST}
+      FLASK_PORT: ${FLASK_PORT}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
+      ADDITIONAL_ALLOWED_ORIGINS: ${ADDITIONAL_ALLOWED_ORIGINS}
+      BOT_TOKEN: ${BOT_TOKEN}
     ports:
       - 7546:7546
 volumes:

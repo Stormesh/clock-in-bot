@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import InputField from "../../login/components/InputField";
+import InputField from "@components/InputField";
 import Link from "next/link";
+import { createUserAction } from "../../actions/actions";
 
 const Signup = () => {
   enum indicatorState {
@@ -25,41 +26,23 @@ const Signup = () => {
   const handleFormSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
+    const form = event.currentTarget
+
     try {
       const formData = new FormData(event.currentTarget);
-      const response = await fetch("/api/signup", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username: formData.get("username"),
-          password: formData.get("password"),
-          role: formData.get("role"),
-        }),
-      });
+      const response = await createUserAction(formData);
 
-      if (response.ok) {
-        setIndicator(indicatorState.success);
-        setIndicatorText(indicatorTextState.created);
-      } else {
-        setIndicator(indicatorState.error);
-        if (response.status === 409) {
-          setIndicatorText(indicatorTextState.createdExists);
-        } else if (response.status === 400) {
-          setIndicatorText(indicatorTextState.missing);
-        } else {
-          setIndicatorText(indicatorTextState.createdFail);
-        }
-      }
+      if (!response.success) throw new Error(response.error);
+
+      setIndicator(indicatorState.success);
+      setIndicatorText(response.success);
+      form.reset();
     } catch (error) {
       console.error(error);
       setIndicator(indicatorState.error);
-      if (error instanceof Error) {
-        setIndicatorText(error.message);
-      } else {
-        setIndicatorText(indicatorTextState.createdFail);
-      }
+      setIndicatorText(
+        error instanceof Error ? error.message : indicatorTextState.createdFail
+      );
     }
   };
 
@@ -84,10 +67,15 @@ const Signup = () => {
           type="password"
           grid
         />
-        <InputField name="role" labelText="Role" select={["User", "Admin"]} grid />
+        <InputField
+          name="role"
+          labelText="Role"
+          select={["User", "Admin"]}
+          grid
+        />
         {indicator !== indicatorState.none && (
           <h3
-            className={`text-xl ${
+            className={`text-xl text-center whitespace-pre-line ${
               indicator === indicatorState.success
                 ? "text-green-500"
                 : "text-red-500"

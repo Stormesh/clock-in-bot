@@ -1,16 +1,19 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
-/.pnp
+node_modules
+.pnp
 .pnp.js
 .yarn/install-state.gz
 
 # testing
-/coverage
+coverage
+
+# next
+.next
 
 # production
-/build
+build
 
 # misc
 .DS_Store
@@ -22,7 +25,7 @@ yarn-debug.log*
 yarn-error.log*
 
 # env files
-.env*
+.env*.local
 
 # data
 data.json
@@ -35,5 +38,6 @@ data.json
 next-env.d.ts
 
 # python
-*__pycache__/
+__pycache__/
 venv/
+config.toml

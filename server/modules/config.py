@@ -1,7 +1,7 @@
 import toml
+import os
 
-config = toml.load('config.toml')
-
+config = toml.load('config.toml') if os.path.exists('config.toml') else toml.load('config.example.toml')
 
 no_interaction_message = config['messages']['no_interaction_message'] if config else 'You have to clock in first.'
 

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { FormEvent, useState } from "react";
-import InputField from "./InputField";
+import InputField from "@components/InputField";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 

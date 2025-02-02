@@ -42,11 +42,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           if (!passwordsMatch) {
             throw new Error("Invalid password.");
           }
-
-          console.log(user);
-
+          
           // return user object with their profile data
-          return { id: user._id, name: user.username, roleId: user.roleId };
+          return { id: user._id.toString(), name: user.username, roleId: user.roleId };
         } catch (error) {
           if (error instanceof ZodError) {
             throw new Error(error.issues[0].message);

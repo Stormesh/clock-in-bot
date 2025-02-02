@@ -1,7 +1,7 @@
 import { auth } from "@/src/auth";
 import Link from "next/link";
 import React from "react";
-import SignOutButton from "./SignOutButton";
+import SignOutButton from "@components/SignOutButton";
 
 const UserPanel = async () => {
   const session = await auth();
@@ -28,7 +28,7 @@ const UserPanel = async () => {
               permission === "delete-user" || permission === "update-user"
           ) && (
             <Link
-              href="/secretpanel"
+              href="/admin"
               className="bg-blue-900 mx-2 hover:bg-blue-500 hover:scale-110 transition-all duration-300 text-white font-bold py-2 px-4 rounded mt-4 select-none"
             >
               Admin

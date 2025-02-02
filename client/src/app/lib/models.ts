@@ -1,17 +1,19 @@
-import mongoose from "mongoose";
+import mongoose, { Types } from "mongoose";
 
 export interface IRole {
-  _id: string;
+  _id: Types.ObjectId | string;
   name: string;
   priority: number;
   permissions?: string[];
+  __v?: number
 }
 
 export interface IUser {
-  _id: string;
+  _id: Types.ObjectId | string;
   username: string;
   password: string;
-  roleId: string | IRole;
+  roleId: Types.ObjectId | string | IRole;
+  __v?: number
 }
 
 export type PopulatedUser = Omit<IUser, "roleId"> & {
@@ -29,19 +31,13 @@ const userSchema = new mongoose.Schema({
     required: true,
   },
   roleId: {
-    type: String,
+    type: Types.ObjectId,
     ref: "Role",
-    default: "U00",
     required: true,
   },
 });
 
 const roleSchema = new mongoose.Schema({
-  _id: {
-    type: String,
-    required: true,
-    unique: true,
-  },
   name: {
     type: String,
     required: true,
@@ -57,6 +53,8 @@ const roleSchema = new mongoose.Schema({
     default: [],
   },
 })
+
+
 
 export const User = mongoose.models?.User || mongoose.model("User", userSchema);
 export const Role = mongoose.models?.Role || mongoose.model("Role", roleSchema);

@@ -1,11 +1,10 @@
 "use client";
 
 import React, { FC, useState } from "react";
-import InputField from "../../login/components/InputField";
-import Alert from "../../components/Alert";
-import { PopulatedUser } from "../../lib/models";
-
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+import InputField from "@components/InputField";
+import Alert from "../Alert";
+import { IRole, PopulatedUser } from "../../lib/models";
+import { deleteUserAction, getRoleAction, updateUserAction } from "../../actions/actions";
 
 interface IUsersTableProps {
   users: PopulatedUser[];
@@ -19,8 +18,6 @@ const UsersTable: FC<IUsersTableProps> = ({ users }) => {
     text: "",
     onConfirm: () => {},
   });
-
-  console.log(users);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
@@ -39,39 +36,23 @@ const UsersTable: FC<IUsersTableProps> = ({ users }) => {
 
   const updateUser = async (id: string, roleName: string) => {
     try {
-      const role = await fetch(`${baseUrl}/api/roles/${roleName}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      const role: IRole = await getRoleAction(roleName);
 
-      const roleData = await role.json();
-
-      if (!roleData) {
+      if (!role) {
         console.error("Role not found for:", roleName);
         return;
       }
 
-      const response = await fetch(`${baseUrl}/api/users/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          roleId: roleData._id,
-        }),
-      });
-      const data = await response.json();
+      const updatedUser = await updateUserAction(id, { roleId: role._id });
       setUsersList((prev) => {
         return prev.map((user) => {
-          if (user._id === id) {
-            return { ...user, roleId: roleData };
+          if (user._id.toString() === id) {
+            return { ...user, roleId: role };
           }
           return user;
         });
       });
-      return data;
+      return updatedUser;
     } catch (error) {
       throw new Error(`Failed to update user: ${error}`);
     }
@@ -94,13 +75,9 @@ const UsersTable: FC<IUsersTableProps> = ({ users }) => {
 
   const deleteUser = async (id: string) => {
     try {
-      await fetch(`${baseUrl}/api/users/${id}`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      setUsersList((prev) => prev.filter((user) => user._id !== id));
+      await deleteUserAction(id);
+      setUsersList((prev) => prev.filter((user) => user._id.toString() !== id));
+      setValue((prev) => prev.filter((_, index) => index !== usersList.findIndex((user) => user._id.toString() === id)));
     } catch (error) {
       throw new Error(`Failed to delete user: ${error}`);
     }
@@ -152,7 +129,7 @@ const UsersTable: FC<IUsersTableProps> = ({ users }) => {
         </thead>
         <tbody className="bg-card-bg border-2 border-table-border">
           {usersList.map((user, index) => (
-            <tr className="border-2 border-table-border" key={user._id}>
+            <tr className="border-2 border-table-border" key={user._id.toString()}>
               <td className="p-1">{user.username}</td>
               <td>
                 <InputField
@@ -164,13 +141,13 @@ const UsersTable: FC<IUsersTableProps> = ({ users }) => {
               </td>
               <td className="select-none">
                 <button
-                  onClick={() => handleUpdateUser(user._id, value[index])}
+                  onClick={() => handleUpdateUser(user._id.toString(), value[index])}
                   className={`bg-green-800 hover:bg-green-600 hover:scale-95 font-bold transition-all rounded-lg p-1 m-1 cursor-pointer`}
                 >
                   Update
                 </button>
                 <button
-                  onClick={() => handleDeleteUser(user._id)}
+                  onClick={() => handleDeleteUser(user._id.toString())}
                   className={`bg-red-800 hover:bg-red-600 hover:scale-95 font-bold transition-all rounded-lg p-1 m-1 cursor-pointer`}
                 >
                   Delete

@@ -1,8 +1,8 @@
 "use client";
 
-import React, { FC, useEffect, useRef, useState } from "react";
-import ClockCard from "./ClockCard";
-import ClockHeader from "./ClockHeader";
+import React, { useEffect, useRef, useState } from "react";
+import ClockCard from "@components/ClockCard";
+import ClockHeader from "@components/ClockHeader";
 import { io, Socket } from "socket.io-client";
 
 const DISCORD_BOT_URL = process.env.NEXT_PUBLIC_DISCORD_BOT_URL ?? "";
@@ -27,19 +27,21 @@ interface IUser {
   onMeeting: boolean;
 }
 
-const ClockList: FC = () => {
+const ClockList = () => {
   const [userData, setUserData] = useState<IUser[]>([]);
   const socket = useRef<Socket | null>(null);
 
   const updateTime = (userId: number) => {
     setUserData((prevUserData) =>
-      prevUserData.map((user) => 
+      prevUserData.map((user) =>
         user.id === userId
           ? {
               ...user,
               clockTime: user.isClockedIn ? user.clockTime + 1 : user.clockTime,
               breakTime: user.onBreak ? user.breakTime + 1 : user.breakTime,
-              meetingTime: user.onMeeting ? user.meetingTime + 1 : user.meetingTime
+              meetingTime: user.onMeeting
+                ? user.meetingTime + 1
+                : user.meetingTime,
             }
           : user
       )
@@ -63,8 +65,8 @@ const ClockList: FC = () => {
 
     return () => {
       socket.current?.disconnect();
-    }
-  })
+    };
+  });
 
   useEffect(() => {
     getUserData();

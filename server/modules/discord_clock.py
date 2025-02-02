@@ -3,8 +3,55 @@ import modules.config as config
 
 from modules.clock_funcs import check_role, clock_in, clock_out, meeting_in, break_in, view_time
 from modules.general_data import user_data, get_user, get_server
-from modules.dis_data import get_data, remove_role, add_role
+from modules.dis_data import remove_role, add_role
 import modules.clock_str as clock_str
+
+# class UserManager:
+#     @staticmethod
+#     def is_clocked_in(user_id: int):
+#         user = get_user(user_id)
+#         return user and user['isClockedIn']
+    
+#     @staticmethod
+#     def is_on_break(user_id: int):
+#         user = get_user(user_id)
+#         return user and user['onBreak']
+    
+#     @staticmethod
+#     def is_on_meeting(user_id: int):
+#         user = get_user(user_id)
+#         return user and user['onMeeting']
+    
+#     @staticmethod
+#     def get_clock_time(user_id: int):
+#         user = get_user(user_id)
+#         return user and user['clockTime']
+    
+#     @staticmethod
+#     async def validate_user(user_id: int, interaction: discord.Interaction, validate_role: bool = False):
+#         if validate_role:
+#             if not await check_role(interaction):
+#                 return
+        
+#         user = get_user(user_id)
+
+# class LogManager:
+#     @staticmethod
+#     def get_log_channel(guild: discord.Guild):
+#         server = get_server(guild.id)
+#         if server:
+#             log_id = int(server['logId'])
+#             if guild:
+#                 log_channel = guild.get_channel(log_id)
+#                 if isinstance(log_channel, discord.TextChannel):
+#                     return log_channel
+    
+#     @staticmethod
+#     async def send_log_message(guild: discord.Guild, message: str):
+#         log_channel = LogManager.get_log_channel(guild)
+#         if log_channel:
+#             await log_channel.send(message)
+        
 
 class ClockInView(discord.ui.View):
     def __init__(self):
@@ -72,7 +119,6 @@ class ClockInView(discord.ui.View):
                                 embed = discord.Embed(title='Clocked out', description=await clock_out(interaction), color=discord.Color.red())
                                 await log_channel.send(embed=embed)
                 out_response = await clock_out(interaction, log=True)
-
                 try:
                     user_data.remove(user)
                 except ValueError:
@@ -85,7 +131,7 @@ class ClockInView(discord.ui.View):
                             await remove_role(interaction.user, clock_in_id)
 
                             break_id = server.get('breakRoleId')
-                            await add_role(interaction.user, interaction.guild, break_id)
+                            await remove_role(interaction.user, break_id)
 
                             meeting_id = server.get('meetingRoleId')
                             await remove_role(interaction.user, meeting_id)
@@ -99,6 +145,7 @@ class ClockInView(discord.ui.View):
 
         if not await check_role(interaction):
             return
+
         user = get_user(user_id)
         if not user:
             await interaction.followup.send(config.no_interaction_message, ephemeral=True)
@@ -213,31 +260,41 @@ class ClockInView(discord.ui.View):
         await interaction.response.defer()
         user_id = interaction.user.id
 
-        if await check_role(interaction):
-            user = get_user(user_id)
-            if user:
-                if user['isClockedIn']:
-                    user_meeting_message = config.user_meeting_message.format(user_name=interaction.user.mention)
-                    embed = discord.Embed(title='In meeting', description=user_meeting_message, color=discord.Color.green())
-                    if interaction.guild:
-                        server = next((server for server in get_data() if server['id'] == interaction.guild.id), None)
-                        if server:
-                            log_id = int(server['logId'])
-                            log_channel = interaction.guild.get_channel(log_id)
-                            if isinstance(log_channel, discord.TextChannel):
-                                await log_channel.send(embed=embed)
-                            if isinstance(interaction.user, discord.Member):
-                                clock_role_id = server.get('clockRoleId')
-                                await remove_role(interaction.user, clock_role_id)
+        if not await check_role(interaction):
+            return
+        
+        user = get_user(user_id)
+        if not user:
+            await interaction.followup.send(config.no_interaction_message, ephemeral=True)
+            return
+        
+        if user['onMeeting']:
+            await interaction.followup.send(config.already_in_meeting_message, ephemeral=True)
+            return
 
-                                meeting_role_id = server.get('meetingRoleId')
-                                await add_role(interaction.user, interaction.guild, meeting_role_id)
-                            await interaction.followup.send(config.meeting_message, ephemeral=True)
-                            await meeting_in(interaction)
-                elif user['onMeeting']:
-                    await interaction.followup.send(config.already_in_meeting_message, ephemeral=True)
-                else:
-                    await interaction.followup.send(config.not_clocked_in_message, ephemeral=True)
-            else:
-                await interaction.followup.send(config.no_interaction_message, ephemeral=True)
+        if not user['isClockedIn']:
+            await interaction.followup.send(config.not_clocked_in_message, ephemeral=True)
+            return
+        
+        user_meeting_message = config.user_meeting_message.format(user_name=interaction.user.mention)
+        embed = discord.Embed(title='In meeting', description=user_meeting_message, color=discord.Color.green())
+        server = get_server(interaction.guild_id)
+        if not server:
+            return
+        
+        if not interaction.guild:
+            return
+        
+        log_id = int(server['logId'])
+        log_channel = interaction.guild.get_channel(log_id)
+        if isinstance(log_channel, discord.TextChannel):
+            await log_channel.send(embed=embed)
+        if isinstance(interaction.user, discord.Member):
+            clock_role_id = server.get('clockRoleId')
+            await remove_role(interaction.user, clock_role_id)
+
+            meeting_role_id = server.get('meetingRoleId')
+            await add_role(interaction.user, interaction.guild, meeting_role_id)
+        await interaction.followup.send(config.meeting_message, ephemeral=True)
+        await meeting_in(interaction)
 

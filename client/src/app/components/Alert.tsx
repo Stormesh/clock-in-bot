@@ -1,5 +1,5 @@
 import React, { FC } from "react";
-import AlertButton from "./AlertButton";
+import AlertButton from "@components/AlertButton";
 
 interface IAlertProps {
   text: string;
