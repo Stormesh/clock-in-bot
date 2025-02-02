@@ -5,7 +5,7 @@ import ClockCard from "@components/ClockCard";
 import ClockHeader from "@components/ClockHeader";
 import { io, Socket } from "socket.io-client";
 
-const DISCORD_BOT_URL = process.env.NEXT_PUBLIC_DISCORD_BOT_URL ?? "";
+const DISCORD_BOT_URL = process.env.NEXT_PUBLIC_DISCORD_BOT_URL;
 
 if (!DISCORD_BOT_URL) {
   console.error(
