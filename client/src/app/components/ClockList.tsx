@@ -8,9 +8,7 @@ import { io, Socket } from "socket.io-client";
 const DISCORD_BOT_URL = process.env.NEXT_PUBLIC_DISCORD_BOT_URL;
 
 if (!DISCORD_BOT_URL) {
-  console.error(
-    "Please define the DISCORD_BOT_URL environment variable inside .env.local"
-  );
+  throw new Error("Please define the DISCORD_BOT_URL environment variable inside .env.local")
 }
 
 const url = DISCORD_BOT_URL;
