@@ -17,7 +17,6 @@ services:
       - ./client/.env.local
       - ./client/.env.production.local
     environment:
-      NODE_ENV: production
       AUTH_SECRET: ${AUTH_SECRET}
       AUTH_TRUST_HOST: ${AUTH_TRUST_HOST}
       MONGODB_URI: ${MONGODB_URI}

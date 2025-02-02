@@ -16,8 +16,6 @@ services:
       - ./client/.env
       - ./client/.env.local
       - ./client/.env.production.local
-    environment:
-      NODE_ENV: production
     ports:
       - 3000:3000
   server:
