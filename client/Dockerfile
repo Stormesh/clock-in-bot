@@ -8,7 +8,7 @@ COPY next.config.mjs .
 RUN npm install
 
 ENV NODE_ENV production
-ARG NEXT_PUBLIC_DISCORD_BOT_URL="http://localhost:7546"
+ARG NEXT_PUBLIC_DISCORD_BOT_URL="https://c8k0os0gwksk484w8skkwgkc.boom-va.com"
 
 ENV NEXT_PUBLIC_DISCORD_BOT_URL $NEXT_PUBLIC_DISCORD_BOT_URL
 
