@@ -4,6 +4,7 @@ import React, { FormEvent, useState } from "react";
 import InputField from "@components/InputField";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
+import { signInSchema } from "../../lib/zod";
 
 const Login = () => {
   const [error, setError] = useState<string>("");
@@ -21,6 +22,11 @@ const Login = () => {
         password: formData.get("password") as string,
       };
 
+      const validation = await signInSchema.safeParseAsync(user);
+
+      if (!validation.success)
+        throw new Error(validation.error.errors.map((error) => error.message).join("\n"));
+
       // Auth.js
       const response = await signIn("credentials", {
         username: user.username,
@@ -29,14 +35,13 @@ const Login = () => {
       });
 
       if (response?.error || !response?.ok) {
-        return setError("Failed to log in");
+        throw new Error("Failed to log in");
       }
 
       return router.push("/");
     } catch (e) {
       console.error(e);
-      setError("Failed to log in");
-      throw new Error("Failed to log in");
+      setError(e instanceof Error ? e.message : "Failed to log in");
     }
   };
 
@@ -61,7 +66,7 @@ const Login = () => {
           grid
           type="password"
         />
-        {error && <h4 className="text-xl text-red-500">{error}</h4>}
+        {error && <h4 className="text-xl text-red-500 whitespace-pre-line text-center">{error}</h4>}
         <button
           className="bg-green-700 hover:bg-green-500 font-sans p-2 text-xl m-3 rounded-lg hover:scale-110 transition-all duration-300 cursor-pointer"
           type="submit"

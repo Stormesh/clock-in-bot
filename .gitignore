@@ -27,6 +27,9 @@ yarn-error.log*
 # env files
 .env*.local
 
+# caddyfile
+Caddyfile
+
 # data
 data.json
 
