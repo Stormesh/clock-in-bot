@@ -4,7 +4,14 @@ import React, { useEffect, useRef, useState } from "react";
 import ClockCard from "@components/ClockCard";
 import ClockHeader from "@components/ClockHeader";
 import { io, Socket } from "socket.io-client";
-import { getDiscordData } from "../actions/actions";
+
+const DISCORD_BOT_URL = process.env.NEXT_PUBLIC_DISCORD_BOT_URL;
+
+if (!DISCORD_BOT_URL) {
+  throw new Error("Please define the DISCORD_BOT_URL environment variable inside .env.local")
+}
+
+const url = DISCORD_BOT_URL;
 
 interface IUser {
   id: number;
@@ -41,7 +48,8 @@ const ClockList = () => {
 
   const getUserData = async () => {
     try {
-      const data = await getDiscordData();
+      const response = await fetch(`${url}/api/users`);
+      const data = await response.json();
       setUserData(data);
     } catch (error) {
       console.error("Error fetching user data: ", error);
@@ -49,7 +57,8 @@ const ClockList = () => {
   };
 
   useEffect(() => {
-    socket.current = io();
+    if (!url) return;
+    socket.current = io(url);
     socket.current.on("update", getUserData);
 
     return () => {
