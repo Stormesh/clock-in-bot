@@ -19,8 +19,6 @@ services:
       - ./client/.env
       - ./client/.env.local
       - ./client/.env.production.local
-    environment:
-      - NEXT_PUBLIC_DISCORD_BOT_URL = ${NEXT_PUBLIC_DISCORD_BOT_URL}
     ports:
       - 3000:3000
   server:
