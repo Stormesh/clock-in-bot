@@ -14,6 +14,23 @@ import { IRole, IUser, PopulatedUser } from "../lib/models";
 import { signUpSchema } from "../lib/zod";
 import { Types } from "mongoose";
 
+const DISCORD_BOT_URL = process.env.DISCORD_BOT_URL;
+
+if (!DISCORD_BOT_URL) {
+  throw new Error("Please define the DISCORD_BOT_URL environment variable inside .env.local")
+}
+
+export const getDiscordData = async () => {
+  try {
+    const response = await fetch(`${DISCORD_BOT_URL}/api/users`);
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error(error);
+    throw new Error("Failed to get Discord data");
+  }
+}
+
 // User
 const transformUser = (user: IUser | PopulatedUser) => {
   const transformedUser = {

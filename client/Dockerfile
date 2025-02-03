@@ -7,8 +7,8 @@ COPY next.config.mjs .
 
 RUN npm install
 
-ENV NODE_ENV production
-ARG NEXT_PUBLIC_DISCORD_BOT_URL
+ARG DISCORD_BOT_URL="http://localhost:7546"
+ARG BASE_URL="http://localhost:3000"
 
 COPY . .
 
