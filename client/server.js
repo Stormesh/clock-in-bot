@@ -2,12 +2,14 @@
 import { createServer } from "http";
 import { Server as SocketIoServer } from "socket.io";
 import { io as SocketIoClient } from "socket.io-client";
+import { config } from "dotenv";
 import next from "next";
 
 const dev = process.env.NODE_ENV !== "production";
 const app = next({ dev });
 const handle = app.getRequestHandler();
 const PORT = process.env.PORT || 3000;
+config({ path: [".env.production.local", ".env.local", ".env"] });
 
 const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
 
