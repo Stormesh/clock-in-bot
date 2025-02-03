@@ -3,6 +3,8 @@ services:
   db:
     image: mongo:4.4.6
     container_name: clock-mongodb
+    networks:
+      - clock-network
     ports:
       - 27016:27017
     volumes:
@@ -10,23 +12,46 @@ services:
   web:
     depends_on:
       - db
-    build: ./client
+    build:
+      context: ./client
     container_name: clock-web
     env_file:
       - ./client/.env
       - ./client/.env.local
       - ./client/.env.production.local
-    ports:
-      - 3000:3000
+    networks:
+      - clock-network
+    expose:
+      - 3000
   server:
     build: ./server
     container_name: clock-discord
     env_file:
       - ./server/.env
       - ./server/.env.local
+    networks:
+      - clock-network
+    expose:
+      - 7546
+  caddy:
+    image: caddy:2-alpine
+    container_name: clock-caddy
+    depends_on:
+      - web
+      - server
     ports:
-      - 7546:7546
-    # volumes:
-    #   - ./server/modules/data.json:/app/modules/data.json
+      - 80:80
+      - 443:443
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - clock-network
 volumes:
   db-data:
+  caddy_data:
+  caddy_config:
+networks:
+  clock-network:
+    driver: bridge
