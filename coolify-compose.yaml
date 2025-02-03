@@ -17,11 +17,11 @@ services:
       - ./client/.env.local
       - ./client/.env.production.local
     environment:
-      - AUTH_SECRET = ${AUTH_SECRET}
-      - AUTH_TRUST_HOST = ${AUTH_TRUST_HOST}
-      - MONGODB_URI = ${MONGODB_URI}
-      - BASE_URL = ${BASE_URL}
-      - DISCORD_BOT_URL = ${DISCORD_BOT_URL}
+      AUTH_SECRET: ${AUTH_SECRET}
+      AUTH_TRUST_HOST: ${AUTH_TRUST_HOST}
+      MONGODB_URI: ${MONGODB_URI}
+      NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL}
+      NEXT_PUBLIC_DISCORD_BOT_URL: ${NEXT_PUBLIC_DISCORD_BOT_URL}
     ports:
       - 3000:3000
   server:
