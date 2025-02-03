@@ -10,16 +10,16 @@ services:
   web:
     depends_on:
       - db
-    build: ./client
+    build:
+      context: ./client
+      args:
+        - NEXT_PUBLIC_DISCORD_BOT_URL = ${NEXT_PUBLIC_DISCORD_BOT_URL}
     container_name: clock-web
     env_file:
       - ./client/.env
       - ./client/.env.local
       - ./client/.env.production.local
     environment:
-      - AUTH_SECRET = ${AUTH_SECRET}
-      - AUTH_TRUST_HOST = ${AUTH_TRUST_HOST}
-      - MONGODB_URI = ${MONGODB_URI}
       - NEXT_PUBLIC_DISCORD_BOT_URL = ${NEXT_PUBLIC_DISCORD_BOT_URL}
     ports:
       - 3000:3000
@@ -29,12 +29,6 @@ services:
     env_file:
       - ./server/.env
       - ./server/.env.local
-    environment:
-      FLASK_HOST: ${FLASK_HOST}
-      FLASK_PORT: ${FLASK_PORT}
-      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
-      ADDITIONAL_ALLOWED_ORIGINS: ${ADDITIONAL_ALLOWED_ORIGINS}
-      BOT_TOKEN: ${BOT_TOKEN}
     ports:
       - 7546:7546
 volumes:
