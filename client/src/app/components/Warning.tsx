@@ -8,9 +8,9 @@ interface IWarningProps {
 }
 
 const Warning: FC<IWarningProps> = ({
-  text = "This is a warning message.",
-  link = null,
-  linkText = null,
+  text = "You do not have permission to view this page.",
+  link = "/",
+  linkText = "Go back",
 }) => {
   return (
     <div className="flex flex-col justify-center items-center h-screen">

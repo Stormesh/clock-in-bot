@@ -21,8 +21,8 @@ services:
       - ./client/.env.production.local
     networks:
       - clock-network
-    expose:
-      - 3000
+    ports:
+      - 3000:3000
   server:
     build: ./server
     container_name: clock-discord
@@ -33,8 +33,8 @@ services:
       - clock-network
     volumes:
       - ./server/modules/data.json:/app/modules/data.json
-    expose:
-      - 7546
+    ports:
+      - 7546:7546
 volumes:
   db-data:
 networks:

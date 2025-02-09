@@ -1,8 +1,11 @@
 import React, { FC } from "react";
 import Image from "next/image";
 import styles from "@/styles/clock.module.css";
+import WarnButton from "./WarnButton";
+import KickButton from "./KickButton";
 
 interface IUserProps {
+  id: string;
   name: string;
   avatar: string;
   clockTime: number;
@@ -14,6 +17,7 @@ interface IUserProps {
 }
 
 const ClockCard: FC<IUserProps> = ({
+  id,
   name,
   avatar,
   clockTime,
@@ -39,7 +43,11 @@ const ClockCard: FC<IUserProps> = ({
       <td className="text-violet-200 font-mono">
         {timeFormat(time)}
         <span
-          className={effect ? styles.onEffect : "hidden"}
+          className={
+            effect
+              ? `${styles.onEffect} inline-block text-xl md:text-4xl md:pl-2`
+              : "hidden"
+          }
           aria-hidden={!effect}
         >
           {emoji}
@@ -49,23 +57,31 @@ const ClockCard: FC<IUserProps> = ({
   };
 
   return (
-    <tr className="bg-card-bg even:bg-[#3b3553] border-2 border-table-border">
-      <td>
-        <div className="mx-3 my-1">
-          <Image
-            className="rounded-full place-self-center m-1 hover:scale-110 transition-transform"
-            src={avatar}
-            alt={name}
-            width={100}
-            height={100}
-          />
-          <p className="text-violet-300 font-sans font-light">{name}</p>
-        </div>
-      </td>
-      {timeElement(clockTime, isClockedIn, "🕒")}
-      {timeElement(meetingTime, onMeeting, "📅")}
-      {timeElement(breakTime, onBreak, "☕")}
-    </tr>
+    <>
+      <tr className="bg-card-bg even:bg-[#3b3553] border-2 border-table-border border-b-transparent text-lg md:text-3xl">
+        <td>
+          <div className="mx-2 md:mx-3 my-1 flex flex-col items-center justify-center">
+            <Image
+              className="rounded-full m-1 hover:scale-110 transition-transform w-[65px] h-[65px] md:w-[100px] md:h-[100px]"
+              src={avatar}
+              alt={name}
+              width={100}
+              height={100}
+            />
+            <p className="text-violet-300 font-sans font-light">{name}</p>
+          </div>
+        </td>
+        {timeElement(clockTime, isClockedIn, "🕒")}
+        {timeElement(meetingTime, onMeeting, "📅")}
+        {timeElement(breakTime, onBreak, "☕")}
+      </tr>
+      <tr className="bg-card-bg even:bg-[#3b3553]">
+        <td colSpan={4}>
+          <WarnButton userId={id} />
+          <KickButton userId={id} />
+        </td>
+      </tr>
+    </>
   );
 };
 

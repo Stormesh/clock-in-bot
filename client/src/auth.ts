@@ -6,7 +6,8 @@ import { signInSchema } from "./app/lib/zod";
 import { compare } from "bcryptjs";
 import { getUser } from "./app/lib/data";
 import { ZodError } from "zod";
-import { PopulatedUser } from "./app/lib/models";
+import { Action, PopulatedUser, Severity } from "./app/lib/models";
+import { createLogAction } from "./app/actions/actions";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -42,6 +43,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           if (!passwordsMatch) {
             throw new Error("Invalid password.");
           }
+
+          await createLogAction({
+            userId: user._id,
+            roleId: user.roleId._id,
+            action: Action.LOGIN,
+            severity: Severity.LOW,
+            description: `${user.username} has logged in`,
+            createdAt: new Date(),
+          });
           
           // return user object with their profile data
           return { id: user._id.toString(), name: user.username, roleId: user.roleId };

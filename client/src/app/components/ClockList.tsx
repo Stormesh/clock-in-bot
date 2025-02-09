@@ -4,17 +4,10 @@ import React, { useEffect, useRef, useState } from "react";
 import ClockCard from "@components/ClockCard";
 import ClockHeader from "@components/ClockHeader";
 import { io, Socket } from "socket.io-client";
-
-const DISCORD_BOT_URL = process.env.NEXT_PUBLIC_DISCORD_BOT_URL;
-
-if (!DISCORD_BOT_URL) {
-  throw new Error("Please define the DISCORD_BOT_URL environment variable inside .env.local")
-}
-
-const url = DISCORD_BOT_URL;
+import { getDiscordData } from "../actions/actions";
 
 interface IUser {
-  id: number;
+  id: string;
   name: string;
   avatar: string;
   clockTime: number;
@@ -29,7 +22,7 @@ const ClockList = () => {
   const [userData, setUserData] = useState<IUser[]>([]);
   const socket = useRef<Socket | null>(null);
 
-  const updateTime = (userId: number) => {
+  const updateTime = (userId: string) => {
     setUserData((prevUserData) =>
       prevUserData.map((user) =>
         user.id === userId
@@ -48,8 +41,7 @@ const ClockList = () => {
 
   const getUserData = async () => {
     try {
-      const response = await fetch(`${url}/api/users`);
-      const data = await response.json();
+      const data = await getDiscordData();
       setUserData(data);
     } catch (error) {
       console.error("Error fetching user data: ", error);
@@ -57,14 +49,13 @@ const ClockList = () => {
   };
 
   useEffect(() => {
-    if (!url) return;
-    socket.current = io(url);
+    socket.current = io();
     socket.current.on("update", getUserData);
 
     return () => {
       socket.current?.disconnect();
     };
-  });
+  }, []);
 
   useEffect(() => {
     getUserData();
@@ -102,13 +93,14 @@ const ClockList = () => {
   return (
     <>
       {userData.length > 0 ? (
-        <table className="text-3xl mt-10 mx-auto table border-2 border-collapse shadow-sm shadow-black">
+        <table className="mt-10 mx-auto w-fit table border-2 border-collapse shadow-sm shadow-black">
           <ClockHeader />
-          <tbody className="text-center border-2 border-[#453c8a]">
+          <tbody className="text-center border-2 border-table-border">
             {userData.map((user) => {
               return (
                 <ClockCard
                   key={user.id}
+                  id={user.id}
                   name={user.name}
                   avatar={user.avatar}
                   clockTime={user.clockTime}

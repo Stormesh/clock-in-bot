@@ -2,6 +2,10 @@
 break_time = 60
 part_break_time = 30
 
+[clock]
+full_time_hour_limit = 8
+part_time_hour_limit = 4
+
 [messages]
 no_interaction_message = 'You have to clock in first.'
 
@@ -16,6 +20,7 @@ no_permission_clock_message = 'You do not have permission to clock in.'
 # Clock Out
 clock_out_message = '{user_name} has clocked out.'
 clock_out_data_message = '{date} - {user_name} has clocked out.\n**Business Hours**\n{hours} hour{hours_s} and {minutes} minute{minutes_s}\n**Meeting Time**\n{meeting_hours} hour{meeting_hours_s} and {meeting_minutes} minute{meeting_minutes_s}\n**Break Time**\n{break_hours} hour{break_hours_s} and {break_minutes} minute{break_minutes_s}'
+remind_clock_out_message = 'Your shift is over, please clock out.'
 
 # View Time
 view_time_message = '**Working time:**\n{business_hours} hour{business_hours_s}, {business_minutes} minute{business_minutes_s} and {business_seconds} second{business_seconds_s}\n**Break time:**\n{break_hours} hour{break_hours_s}, {break_minutes} minute{break_minutes_s} and {break_seconds} second{break_seconds_s}.'
@@ -39,3 +44,4 @@ already_in_meeting_message = 'You are already in a meeting.'
 
 # Setup
 no_permission_setup_message = 'You do not have permission to set up the bot.'
+no_guild_message = 'You must be in a server to use the bot.'

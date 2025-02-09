@@ -3,7 +3,9 @@
 import React, { useState } from "react";
 import InputField from "@components/InputField";
 import Link from "next/link";
-import { createUserAction } from "../../actions/actions";
+import { createLogAction, createUserAction } from "../../actions/actions";
+import { useSession } from "next-auth/react";
+import { Action, Severity } from "../../lib/models";
 
 const Signup = () => {
   enum indicatorState {
@@ -12,6 +14,8 @@ const Signup = () => {
     none = -1,
   }
   const [indicator, setIndicator] = useState(indicatorState.none);
+
+  const {data: session} = useSession();
 
   enum indicatorTextState {
     created = "Account created successfully!",
@@ -36,6 +40,16 @@ const Signup = () => {
 
       setIndicator(indicatorState.success);
       setIndicatorText(response.success);
+      if (session?.user.id) {
+        await createLogAction({
+          userId: session.user.id,
+          roleId: session.user.roleId._id,
+          action: Action.CREATE,
+          severity: Severity.MEDIUM,
+          description: `${session.user.name} has created a new account for ${formData.get("username")}`,
+          createdAt: new Date(),
+        })
+      }
       form.reset();
     } catch (error) {
       console.error(error);

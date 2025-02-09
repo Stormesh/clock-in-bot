@@ -1,4 +1,5 @@
-import { IRole, IUser, PopulatedUser, Role, User } from "./models";
+import { Types } from "mongoose";
+import { ILog, IRole, IUser, Log, PopulatedUser, Role, User } from "./models";
 import { connectDB } from "./utils";
 
 // User
@@ -16,7 +17,7 @@ export const getUser = async (username: string) => {
 export const createUser = async (
   username: string,
   password: string,
-  roleId: string
+  roleId: Types.ObjectId
 ) => {
   try {
     await connectDB();
@@ -31,7 +32,10 @@ export const createUser = async (
 export const getUsers = async () => {
   try {
     await connectDB();
-    const users = await User.find().select("-password").populate("roleId").lean();
+    const users = await User.find()
+      .select("-password")
+      .populate("roleId")
+      .lean();
     return users as PopulatedUser[];
   } catch (error) {
     console.error(error);
@@ -40,12 +44,18 @@ export const getUsers = async () => {
 };
 
 export const updateUserById = async (
-  _id: string,
+  _id: Types.ObjectId,
   data: Partial<IUser>
 ) => {
   try {
     await connectDB();
-    const user = await User.findOneAndUpdate({ _id }, { $set: data }, { new: true }).select("-password").lean();
+    const user = await User.findOneAndUpdate(
+      { _id },
+      { $set: data },
+      { new: true }
+    )
+      .select("-password")
+      .lean();
     return user as IUser;
   } catch (error) {
     console.error(error);
@@ -53,7 +63,7 @@ export const updateUserById = async (
   }
 };
 
-export const deleteUserById = async (_id: string) => {
+export const deleteUserById = async (_id: Types.ObjectId) => {
   try {
     await connectDB();
     const user = await User.deleteOne({ _id }, { new: true });
@@ -79,7 +89,7 @@ export const getRoleByName = async (name: string) => {
     console.error(error);
     throw new Error("Failed to find role");
   }
-}
+};
 
 export const getRoles = async () => {
   try {
@@ -89,5 +99,32 @@ export const getRoles = async () => {
   } catch (error) {
     console.error(error);
     throw new Error("Failed to get roles");
+  }
+};
+
+// Logs
+export const getLogs = async () => {
+  try {
+    await connectDB();
+    const logs = await Log.find()
+      .populate("userId", "username")
+      .populate("roleId", "name")
+      .lean()
+      .sort({ createdAt: -1 });
+    return logs;
+  } catch (error) {
+    console.error(error);
+    throw new Error("Failed to get logs");
+  }
+};
+
+export const createLog = async (log: ILog) => {
+  try {
+    await connectDB();
+    const newLog = await Log.create(log);
+    return newLog;
+  } catch (error) {
+    console.error(error);
+    throw new Error("Failed to create log");
   }
 }

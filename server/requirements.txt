@@ -4,7 +4,7 @@ aiofiles
 aiohttp
 audioop-lts
 toml
-Flask
-Flask-Cors
-Flask-SocketIO
-eventlet
+quart
+quart-cors
+uvicorn
+python-socketio

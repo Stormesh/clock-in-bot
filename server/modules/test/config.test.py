@@ -10,7 +10,7 @@ import unittest
 import config
 from clock_str import make_plural
 
-class TextFormatting(unittest.TestCase):
+class ConfigTest(unittest.TestCase):
     def test_text_formatting(self):
         clock_out_data_m = config.clock_out_data_message.format(
             date='2023-08-09',
@@ -30,6 +30,10 @@ class TextFormatting(unittest.TestCase):
         ).replace('\\n', '\n')
         expected = '2023-08-09 - John Doe has clocked out.\n**Business Hours**\n1 hour and 2 minutes\n**Meeting Time**\n3 hours and 4 minutes\n**Break Time**\n5 hours and 6 minutes'
         self.assertEqual(clock_out_data_m, expected)
+    
+    def test_break_time(self):
+        self.assertEqual(config.break_time_limit, 3600)
+        self.assertEqual(config.part_break_time_limit, 1800)
 
 if __name__ == '__main__':
     unittest.main()
