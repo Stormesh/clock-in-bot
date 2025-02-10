@@ -32,11 +32,12 @@ services:
     networks:
       - clock-network
     volumes:
-      - ./server/modules/data.json:/app/modules/data.json
+      - discord-data:/app/modules/data.json
     ports:
       - 7546:7546
 volumes:
   db-data:
+  discord-data:
 networks:
   clock-network:
     driver: bridge

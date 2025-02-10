@@ -37,7 +37,6 @@ export const getDiscordData = async () => {
 export const dmDiscordUser = async (userId: string, formData: FormData, method = "POST") => {
   try {
     const message = formData.get("message");
-    console.log(message);
     await fetch(`${DISCORD_BOT_URL}/api/users/dm/${userId}`, {
       method: method,
       headers: {

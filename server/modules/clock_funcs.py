@@ -4,6 +4,7 @@ import datetime
 import modules.clock_str as clock_str
 from modules.rest import get, post, patch
 from modules.general_data import user_data, get_user, get_server
+from modules.bot_init import bot
 import math
 import modules.config as config
 import modules.socket as socket
@@ -23,10 +24,16 @@ async def clock_in(interaction: discord.Interaction, _user: discord.Member, back
     user_id = _user.id
     user_name = _user.display_name
 
+    server = get_server(interaction.guild_id)
+
+    if not server or not interaction.guild:
+        return
+
     user = get_user(user_id)
     if not user:
         user_data.append({
             'id': user_id,
+            'guildId': interaction.guild.id,
             'name': user_name,
             'avatar': interaction.user.display_avatar.url,
             'clockTime': 0,
@@ -39,11 +46,6 @@ async def clock_in(interaction: discord.Interaction, _user: discord.Member, back
         user = get_user(user_id)
 
     if not user:
-        return
-
-    server = get_server(interaction.guild_id)
-
-    if not server or not interaction.guild:
         return
 
     if not back:
@@ -61,8 +63,9 @@ async def clock_in(interaction: discord.Interaction, _user: discord.Member, back
         await asyncio.sleep(1)
         if user['isClockedIn']:
             user['clockTime'] += 1
-            if user['clockTime'] == shift_time:
-                await remind_user_to_clock_out(_user)
+
+        if user['clockTime'] == shift_time:
+            await remind_user_to_clock_out(_user)
 
 def get_shift_time(interaction: discord.Interaction, _user: discord.Member) -> int:
     server = get_server(interaction.guild_id)
@@ -78,13 +81,12 @@ def get_shift_time(interaction: discord.Interaction, _user: discord.Member) -> i
             shift_time = config.part_time_hour_limit
     return shift_time
 
-async def clock_out(interaction: discord.Interaction, log: bool = False):
-    user_id = interaction.user.id
+async def clock_out(user_id: int, guild_id: int, log: bool = False, kick: bool = False) -> str:
     user = get_user(user_id)
     if not user:
         return config.no_interaction_message
 
-    server = get_server(interaction.guild_id)
+    server = get_server(guild_id)
 
     if not server:
         return config.no_guild_message
@@ -114,10 +116,14 @@ async def clock_out(interaction: discord.Interaction, log: bool = False):
     if week_day > 3:
         week_day = 3
     weeks[week_day] = week_time_str
-    
+
+    bot_user = bot.get_user(user_id)
+    if not bot_user:
+        return config.no_interaction_message
+
     clock_out_data_message = config.clock_out_data_message.format(
         date=today.strftime('%A %m/%d/%Y'),
-        user_name=interaction.user.mention, 
+        user_name=bot_user.mention, 
         hours=hours,
         hours_s=clock_str.make_plural(hours),
         minutes=minutes, 
@@ -137,11 +143,11 @@ async def clock_out(interaction: discord.Interaction, log: bool = False):
         if sheet_url:
             sheet_url_str = str(sheet_url)
             sheet = await get(sheet_url_str)
-            sheet_user = next((user for user in sheet if user.get('Agent') == interaction.user.display_name), None)
+            sheet_user = next((current_user for current_user in sheet if current_user.get('Agent') == user['name']), None)
             if not sheet_user:
                 try:
                     sheet_data = {
-                        'Agent': interaction.user.display_name,
+                        'Agent': user['name'],
                         'Total / Missing hours': week_time_str,
                         'Week 1': weeks[0],
                         'Week 2': weeks[1],
@@ -176,13 +182,13 @@ async def clock_out(interaction: discord.Interaction, log: bool = False):
                         'Week 3': weeks[2],
                         'Week 4': weeks[3],
                     }
-                    response = await patch(f'{sheet_url}/Agent/{interaction.user.display_name}', sheet_data)
+                    response = await patch(f'{sheet_url}/Agent/{user["name"]}', sheet_data)
                     print(response)
                     await get(sheet_url_str)
                 except Exception as e:
                     print(f'Error while patching data: {e}')
-        await sio.emit('update', {'message': f'{interaction.user.display_name} has clocked out.'}) # type: ignore
-    return clock_out_data_message
+        await sio.emit('update', {'message': f'{user["name"]} has clocked out.'}) # type: ignore
+    return clock_out_data_message + ('\n\nThis user has been removed from the clock in bot.' if kick else '')
 
 async def meeting_in(interaction: discord.Interaction, _user: discord.Member):
     user_id = _user.id
@@ -200,8 +206,9 @@ async def meeting_in(interaction: discord.Interaction, _user: discord.Member):
         await asyncio.sleep(1)
         if user['onMeeting']:
             user['meetingTime'] += 1
-            if user['meetingTime'] == shift_time:
-                await remind_user_to_clock_out(_user)
+
+        if user['meetingTime'] == shift_time:
+            await remind_user_to_clock_out(_user)
 
 async def break_in(interaction: discord.Interaction, _user: discord.Member):
     user_id = _user.id

@@ -2,8 +2,9 @@ import discord
 import modules.config as config
 
 from modules.clock_funcs import check_role, clock_in, clock_out, meeting_in, break_in, view_time
-from modules.general_data import user_data, get_user, get_server
+from modules.general_data import get_user, remove_user, get_server
 from modules.dis_data import remove_role, add_role
+from modules.bot_init import bot
 import modules.clock_str as clock_str
 
 class LogManager:
@@ -26,7 +27,68 @@ class LogManager:
         log_channel = LogManager.get_log_channel(guild)
         if isinstance(log_channel, discord.TextChannel):
             await log_channel.send(embed=embed)
-        
+
+async def perform_clock_out(user_id: int, guild_id: int, kick: bool = False):
+    user = get_user(user_id)
+    if not user or not user['isClockedIn']:
+        return False
+
+    guild = bot.get_guild(guild_id)
+    if not guild:
+        return False
+
+    member = guild.get_member(user_id)
+    if not member:
+        return False
+
+    server = get_server(guild_id)
+    if not server:
+        return False
+
+
+    # Send log message
+    embed = discord.Embed(
+        title='Clocked out',
+        description=await clock_out(user_id, guild_id, kick=kick),
+        color=discord.Color.red()
+    )
+    await LogManager.send_log_message(guild, embed)
+    out_response = await clock_out(user_id, guild_id, log=True, kick=kick)
+
+    # Update user data
+    try:
+        remove_user(user_id)
+    except ValueError:
+        pass
+
+    # Remove roles
+    clock_in_id = server.get('clockRoleId')
+    break_id = server.get('breakRoleId')
+    meeting_id = server.get('meetingRoleId')
+    await remove_role(member, clock_in_id)
+    await remove_role(member, break_id)
+    await remove_role(member, meeting_id)
+
+    return out_response
+
+async def clock_out_discord(interaction: discord.Interaction):
+        await interaction.response.defer()
+
+        if not await check_role(interaction):
+            return
+
+        if not interaction.guild:
+            await interaction.followup.send(config.no_guild_message, ephemeral=True)
+            return
+
+        user_id = interaction.user.id
+        guild_id = interaction.guild.id
+        success = await perform_clock_out(user_id, guild_id)
+        if not success:
+            await interaction.followup.send(config.no_interaction_message, ephemeral=True)
+            return
+
+        await interaction.followup.send(success, ephemeral=True)
 
 class ClockInView(discord.ui.View):
     def __init__(self):
@@ -72,41 +134,7 @@ class ClockInView(discord.ui.View):
     #Clock Out
     @discord.ui.button(label='Clock Out', style=discord.ButtonStyle.red, emoji='🛑')
     async def clock_out_view(self, interaction: discord.Interaction, button: discord.ui.Button[discord.ui.View]):
-        await interaction.response.defer()
-
-        if not await check_role(interaction):
-            return
-
-        user_id = interaction.user.id
-        user = get_user(user_id)
-        if not user or not user['isClockedIn']:
-            await interaction.followup.send(config.not_clocked_in_message, ephemeral=True)
-            return
-        
-        server = get_server(interaction.guild_id)
-        if not server or not interaction.guild:
-            await interaction.followup.send(config.no_guild_message, ephemeral=True)
-            return
-        
-        embed = discord.Embed(title='Clocked out', description=await clock_out(interaction), color=discord.Color.red())
-        await LogManager.send_log_message(interaction.guild, embed)
-        out_response = await clock_out(interaction, log=True)
-
-        try:
-            user_data.remove(user)
-        except ValueError:
-            print('User not found in user_data.')
-
-        if isinstance(interaction.user, discord.Member):
-            clock_in_id = server.get('clockRoleId')
-            break_id = server.get('breakRoleId')
-            meeting_id = server.get('meetingRoleId')
-
-            await remove_role(interaction.user, clock_in_id)
-            await remove_role(interaction.user, break_id)
-            await remove_role(interaction.user, meeting_id)
-
-        await interaction.followup.send(out_response, ephemeral=True)
+        await clock_out_discord(interaction)
 
     #Clock Break
     @discord.ui.button(label='Break', style=discord.ButtonStyle.blurple, emoji='🍔')
@@ -123,10 +151,10 @@ class ClockInView(discord.ui.View):
             return
 
         await interaction.followup.send((config.not_clocked_in_message if not user['onBreak'] else 
-                                         config.already_on_break_message) if not user['isClockedIn'] else 
+                                         config.already_on_break_message) if user['onBreak'] else 
                                          config.on_break_message, ephemeral=True)
 
-        if not user['isClockedIn']:
+        if not user['clockTime'] > 1 or user['onBreak']:
             return
 
         server = get_server(interaction.guild_id)
@@ -138,14 +166,18 @@ class ClockInView(discord.ui.View):
         embed = discord.Embed(title='Break', description=user_on_break_message, color=discord.Color.blurple())
         await LogManager.send_log_message(interaction.guild, embed)
 
-        if isinstance(interaction.user, discord.Member):
-            clock_in_id = server.get('clockRoleId')
-            break_id = server.get('breakRoleId')
+        if not isinstance(interaction.user, discord.Member):
+            return
+        
+        clock_in_id = server.get('clockRoleId')
+        meeting_id = server.get('meetingRoleId')
+        break_id = server.get('breakRoleId')
 
-            await remove_role(interaction.user, clock_in_id)
-            await add_role(interaction.user, interaction.guild, break_id)
+        await remove_role(interaction.user, clock_in_id)
+        await remove_role(interaction.user, meeting_id)
+        await add_role(interaction.user, interaction.guild, break_id)
 
-            await break_in(interaction, interaction.user)
+        await break_in(interaction, interaction.user)
 
 
 
@@ -248,7 +280,7 @@ class ClockInView(discord.ui.View):
             await interaction.followup.send(config.already_in_meeting_message, ephemeral=True)
             return
 
-        if not user['isClockedIn']:
+        if not user['clockTime'] > 1:
             await interaction.followup.send(config.not_clocked_in_message, ephemeral=True)
             return
         
@@ -266,9 +298,11 @@ class ClockInView(discord.ui.View):
             return
 
         clock_role_id = server.get('clockRoleId')
+        break_role_id = server.get('breakRoleId')
         meeting_role_id = server.get('meetingRoleId')
 
         await remove_role(interaction.user, clock_role_id)
+        await remove_role(interaction.user, break_role_id)
         await add_role(interaction.user, interaction.guild, meeting_role_id)
 
         await meeting_in(interaction, interaction.user)

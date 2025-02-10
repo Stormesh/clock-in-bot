@@ -3,6 +3,7 @@ from modules.dis_data import get_data
 
 class UserData(TypedDict):
     id: int
+    guildId: int
     name: str
     avatar: str
     clockTime: int

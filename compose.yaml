@@ -32,7 +32,7 @@ services:
     networks:
       - clock-network
     volumes:
-      - ./server/modules/data.json:/app/modules/data.json
+      - discord-data:/app/modules/data.json
     ports:
       - 7546:7546
   caddy:
@@ -52,6 +52,7 @@ services:
       - clock-network
 volumes:
   db-data:
+  discord-data:
   caddy_data:
   caddy_config:
 networks:

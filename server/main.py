@@ -10,13 +10,13 @@ sio = socket.init_socket(app)
 # Custom modules
 from modules.dis_data import read_data, save_data, add_data
 import modules.config as config
-from modules.general_data import user_data, remove_user, get_server
-from modules.discord_clock import ClockInView
+from modules.general_data import user_data, get_user, get_server
+from modules.discord_clock import ClockInView, perform_clock_out
 from modules.env import load_env
+from modules.bot_init import bot
 
 # Discord PY
 import discord
-from discord.ext import commands
 
 # Systematic imports
 import asyncio, os
@@ -30,16 +30,10 @@ BOT_TOKEN = os.getenv('BOT_TOKEN', '')
 FLASK_HOST = os.getenv('FLASK_HOST', '0.0.0.0')
 FLASK_PORT = os.getenv('FLASK_PORT', 7546)
 
-intents = discord.Intents.default()
-intents.members = True
-intents.message_content = True
-
-bot = commands.Bot(command_prefix='!', intents=intents)
-
 @app.route('/api/users', methods=['GET'])
 def get_user_data():
     users = [ # type: ignore
-        {**user, 'id': str(user['id']), 'name': user['name']}
+        {**user, 'id': str(user['id']), 'guildId': str(user['guildId'])}
         for user in user_data
     ]
     return jsonify(users)
@@ -58,8 +52,11 @@ async def dm_user(user_id: str):
             await user.send(f'You have been warned for: **{message}**')
             return jsonify({'message': 'Message sent successfully'}), 200
         if request.method == 'DELETE':
+            current_user = get_user(user_id_int)
+            if not current_user:
+                return jsonify({'error': 'User not found'}), 404
             await user.send(f'You have been removed from the clock in bot for: **{message}**')
-            remove_user(user_id_int)
+            await perform_clock_out(user_id_int, current_user['guildId'], kick=True)
             await sio.emit('update', {'message': f'{user.display_name} has been removed.'}) # type: ignore
             return jsonify({'message': 'User deleted successfully'}), 200
     except ValueError:
