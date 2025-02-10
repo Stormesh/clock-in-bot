@@ -8,7 +8,7 @@ cors(app)
 sio = socket.init_socket(app)
 
 # Custom modules
-from modules.dis_data import read_data, save_data, add_data
+from modules.general_data import read_data, save_data, add_data
 import modules.config as config
 from modules.general_data import user_data, get_user, get_server
 from modules.discord_clock import ClockInView, perform_clock_out
