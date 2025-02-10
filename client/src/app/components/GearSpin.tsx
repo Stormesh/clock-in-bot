@@ -6,7 +6,9 @@ const GearSpin = () => {
   return (
     <FontAwesomeIcon
       icon={faGear}
-      className="text-white text-5xl animate-spin"
+      width={60}
+      height={60}
+      className="text-white text-6xl animate-spin"
     />
   );
 };

@@ -35,14 +35,14 @@ const FormKick: FC<IFormKickProps> = ({ userId }) => {
   };
 
   return (
-    <form className="flex flex-col flex-wrap" onSubmit={handleSubmit}>
+    <form className="flex flex-col" onSubmit={handleSubmit}>
       <h3 className="text-center text-xl">Enter the reason</h3>
       <textarea
         className="bg-purple-100 text-black p-2 rounded-md m-2"
         name="message"
         placeholder="Reason"
       />
-      <div className="flex flex-wrap justify-center items-center">
+      <div className="flex justify-center items-center">
         {loading ? (
           <GearSpin />
         ) : (
