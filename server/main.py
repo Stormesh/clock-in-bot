@@ -79,11 +79,11 @@ async def clock(channel: discord.TextChannel, interaction: discord.Interaction):
             if old_message:
                 await old_message.delete()
         server['messageId'] = message.id
-        await save_data('modules/data.json')
+        await save_data('modules/data/data.json')
 
 @bot.event
 async def on_ready():
-    await read_data('modules/data.json')
+    await read_data('modules/data/data.json')
     print(f'Logged in as {bot.user}')
 
     for guild in bot.guilds:
@@ -144,7 +144,7 @@ async def setup(interaction: discord.Interaction, channel: discord.TextChannel, 
         part_role: 'partRoleId'
     })
 
-    await save_data('modules/data.json')
+    await save_data('modules/data/data.json')
 
     await interaction.response.send_message(f'Clock app set up in {channel.mention}\nLogs channel set up in {logs.mention}\nUsers who can access the app need to have the {role.mention} role.', ephemeral=True)
     await clock(channel, interaction)

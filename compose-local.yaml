@@ -32,7 +32,7 @@ services:
     networks:
       - clock-network
     volumes:
-      - discord-data:/app/modules/data.json
+      - discord-data:/app/modules/data
     ports:
       - 7546:7546
 volumes:
