@@ -34,3 +34,9 @@ def get_server(server_id: int | None):
 def is_clocked_in(user_id: int):
     user = get_user(user_id)
     return user and (user['isClockedIn'] or user['onBreak'] or user['onMeeting'])
+
+def get_current_time(user_id: int) -> int:
+    user = get_user(user_id)
+    if not user:
+        return 0
+    return user['clockTime'] + user['meetingTime']

@@ -3,22 +3,14 @@ import asyncio
 import datetime
 import modules.clock_str as clock_str
 from modules.rest import get, post, patch
-from modules.general_data import user_data, get_user, get_server
+from modules.general_data import user_data, get_user, get_server, get_current_time
+from modules.dis_data import send_dm, get_shift_time, remind_user_to_clock_out
 from modules.bot_init import bot
 import math
 import modules.config as config
 import modules.socket as socket
 
 sio = socket.get_socket()
-
-async def send_dm(user: discord.Member, message: str):
-    try:
-        await user.send(message)
-    except discord.Forbidden as e:
-        print(f'Error while sending message to {user.display_name}: {e}')
-
-async def remind_user_to_clock_out(user: discord.Member):
-    await send_dm(user, config.remind_clock_out_message)
 
 async def clock_in(interaction: discord.Interaction, _user: discord.Member, back: bool = False):
     user_id = _user.id
@@ -59,27 +51,17 @@ async def clock_in(interaction: discord.Interaction, _user: discord.Member, back
     await sio.emit('update', {'message': f'{user_name} has clocked in.'}) # type: ignore
 
     shift_time = get_shift_time(interaction, _user)
-    while user['isClockedIn']:
+    while user and user['isClockedIn']:
+        if not user or not user['isClockedIn']:
+            print(f'{user["name"]} clock_in loop ended')
+            break
+
         await asyncio.sleep(1)
-        if user['isClockedIn']:
-            user['clockTime'] += 1
 
-        if user['clockTime'] == shift_time:
+        user['clockTime'] += 1
+
+        if get_current_time(user_id) == shift_time:
             await remind_user_to_clock_out(_user)
-
-def get_shift_time(interaction: discord.Interaction, _user: discord.Member) -> int:
-    server = get_server(interaction.guild_id)
-
-    if not server or not interaction.guild:
-        return 0
-
-    shift_time: int = config.full_time_hour_limit
-    part_agent_id = server.get('partRoleId')
-    if part_agent_id:
-        part_role = interaction.guild.get_role(int(part_agent_id))
-        if part_role in _user.roles:
-            shift_time = config.part_time_hour_limit
-    return shift_time
 
 async def clock_out(user_id: int, guild_id: int, log: bool = False, kick: bool = False) -> str:
     user = get_user(user_id)
@@ -202,12 +184,16 @@ async def meeting_in(interaction: discord.Interaction, _user: discord.Member):
     await sio.emit('update', {'message': f'{interaction.user.display_name} went to a meeting.'}) # type: ignore
 
     shift_time = get_shift_time(interaction, _user)
-    while user['onMeeting']:
-        await asyncio.sleep(1)
-        if user['onMeeting']:
-            user['meetingTime'] += 1
+    while user and user['onMeeting']:
+        if not user or not user['onMeeting']:
+            print(f'{user["name"]} meeting_in loop ended')
+            break
 
-        if user['meetingTime'] == shift_time:
+        await asyncio.sleep(1)
+       
+        user['meetingTime'] += 1
+
+        if get_current_time(user_id) == shift_time:
             await remind_user_to_clock_out(_user)
 
 async def break_in(interaction: discord.Interaction, _user: discord.Member):
@@ -244,10 +230,13 @@ async def break_in(interaction: discord.Interaction, _user: discord.Member):
         break_time_exceeded: 'You have exceeded your break time.'
     }
 
-    while user['onBreak']:
+    while user and user['onBreak']:
         await asyncio.sleep(1)
-        if user['onBreak']:
-            user['breakTime'] += 1
+        if not user or not user['onBreak']:
+            print(f'{user["name"]} break_in loop ended')
+            break
+
+        user['breakTime'] += 1
 
         message = break_messages.get(user['breakTime'])
         if message:
