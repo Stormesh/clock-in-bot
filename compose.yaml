@@ -33,11 +33,12 @@ services:
     networks:
       - clock-network
     volumes:
-      - ./server/modules/data:/app/modules/data
+      - server-data:/app/modules/data
     ports:
       - 7546:7546
 volumes:
   db-data:
+  server-data:
 networks:
   clock-network:
     driver: bridge
