@@ -21,6 +21,7 @@ services:
       - ./client/.env.production.local
     networks:
       - clock-network
+      - caddy_network
     ports:
       - 3000:3000
   server:
@@ -40,3 +41,5 @@ volumes:
 networks:
   clock-network:
     driver: bridge
+  caddy_network:
+    external: true
