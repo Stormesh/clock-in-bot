@@ -1,5 +1,5 @@
 import React, { FC } from "react";
-import { getLogsAction, getLogsPerPageAction } from "../../actions/actions";
+import { getLogsPerPageAction } from "../../actions/actions";
 import { PopulatedLog, Severity } from "../../lib/models";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUser, faUserTie } from "@fortawesome/free-solid-svg-icons";
