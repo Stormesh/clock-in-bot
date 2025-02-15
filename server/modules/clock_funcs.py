@@ -16,9 +16,12 @@ async def clock_in(interaction: discord.Interaction, _user: discord.Member, back
     user_id = _user.id
     user_name = _user.display_name
 
-    server = get_server(interaction.guild_id)
+    if not interaction.guild:
+        return
+    
+    server = get_server(interaction.guild.id)
 
-    if not server or not interaction.guild:
+    if not server:
         return
 
     user = get_user(user_id)
@@ -73,33 +76,30 @@ async def clock_out(user_id: int, guild_id: int, log: bool = False, kick: bool =
     if not server:
         return config.no_guild_message
 
+    def get_time_components(time: int):
+        return (
+            clock_str.get_clock_hours(time),
+            clock_str.get_clock_minutes(time)
+        )
+
+    clock_time = user['clockTime']
+    meeting_time = user['meetingTime']
+    break_time = user['breakTime']
+
+    hours, minutes = get_time_components(clock_time)
+    meeting_hours, meeting_minutes = get_time_components(meeting_time)
+    break_hours, break_minutes = get_time_components(break_time)
+
     today = datetime.date.today()
-    day = today.day
-
-    clock_time: int = user['clockTime']
-    hours = clock_str.get_clock_hours(clock_time)
-    minutes = clock_str.get_clock_minutes(clock_time)
-
-    meeting_time: int = user['meetingTime']
-    meeting_hours = clock_str.get_clock_hours(meeting_time)
-    meeting_minutes = clock_str.get_clock_minutes(meeting_time)
-
-    break_time: int = user['breakTime']
-    break_hours = clock_str.get_clock_hours(break_time)
-    break_minutes = clock_str.get_clock_minutes(break_time)
-
+    week_day = min((today.day - 1) // 7, 3)
+    weeks = ['00;00'] * 4
     total_time = clock_time + meeting_time
     week_time = total_time
     week_time_str = clock_str.get_clock_time(week_time)
     total_time_str = week_time_str
-
-    week_day = (day - 1) // 7
-    weeks: list[str] = [f'00;00' for _ in range(4)]
-    if week_day > 3:
-        week_day = 3
     weeks[week_day] = week_time_str
 
-    bot_user = bot.get_user(user_id)
+    bot_user = await bot.fetch_user(user_id)
     if not bot_user:
         return config.no_interaction_message
 
@@ -123,26 +123,20 @@ async def clock_out(user_id: int, guild_id: int, log: bool = False, kick: bool =
     if log:
         sheet_url = server.get('sheetUrl')
         if sheet_url:
-            sheet_url_str = str(sheet_url)
-            sheet = await get(sheet_url_str)
-            sheet_user = next((current_user for current_user in sheet if current_user.get('Agent') == user['name']), None)
-            if not sheet_user:
-                try:
+            try:
+                sheet_url_str = str(sheet_url)
+                sheet_user = await get(f'{sheet_url_str}/search?Agent={user["name"]}')
+
+                if not sheet_user:
                     sheet_data = {
                         'Agent': user['name'],
                         'Total / Missing hours': week_time_str,
-                        'Week 1': weeks[0],
-                        'Week 2': weeks[1],
-                        'Week 3': weeks[2],
-                        'Week 4': weeks[3],
+                        **{f'Week {i + 1}': week_time_str for i in range(4)},
                     }
                     response = await post(sheet_url_str, sheet_data)
                     print(response)
-                    await get(sheet_url_str)
-                except Exception as e:
-                    print(f'Error while posting data: {e}')
-            else:
-                try:
+                else:
+                    sheet_user = sheet_user[0]
                     existing_weeks = [sheet_user[f'Week {i + 1}'] for i in range(4)]
 
                     for i in range(4):
@@ -159,16 +153,12 @@ async def clock_out(user_id: int, guild_id: int, log: bool = False, kick: bool =
 
                     sheet_data = {
                         'Total / Missing hours': total_time_str,
-                        'Week 1': weeks[0],
-                        'Week 2': weeks[1],
-                        'Week 3': weeks[2],
-                        'Week 4': weeks[3],
+                        **{f'Week {i + 1}': weeks[i] for i in range(4)},
                     }
                     response = await patch(f'{sheet_url}/Agent/{user["name"]}', sheet_data)
                     print(response)
-                    await get(sheet_url_str)
-                except Exception as e:
-                    print(f'Error while patching data: {e}')
+            except Exception as e:
+                print(f'Error while getting data: {e}')
         await sio.emit('update', {'message': f'{user["name"]} has clocked out.'}) # type: ignore
     return clock_out_data_message + ('\n\nThis user has been removed from the clock in bot.' if kick else '')
 
@@ -202,9 +192,12 @@ async def break_in(interaction: discord.Interaction, _user: discord.Member):
     if not user:
         return False
 
-    server = get_server(interaction.guild_id)
+    if not interaction.guild:
+        return False
+    
+    server = get_server(interaction.guild.id)
 
-    if not server or not interaction.guild:
+    if not server:
         return False
     
     user['isClockedIn'] = False
@@ -277,18 +270,25 @@ def view_time(interaction: discord.Interaction):
     return view_time_message
 
 async def check_role(interaction: discord.Interaction):
-    server = get_server(interaction.guild_id)
-    if server and interaction.guild:
-        agent_id = int(server['roleId'])
-        part_id = int(server['partRoleId'])
-        agent_role = interaction.guild.get_role(agent_id)
-        part_role = interaction.guild.get_role(part_id)
-        if agent_role or part_role:
-            if not isinstance(interaction.user, discord.Member):
-                await interaction.followup.send(config.no_permission_clock_message, ephemeral=True)
-                return False
-            
-            if not (agent_role in interaction.user.roles or part_role in interaction.user.roles):
-                await interaction.followup.send(config.no_permission_clock_message, ephemeral=True)
-                return False
+    if not interaction.guild:
+        await interaction.followup.send(config.no_guild_message, ephemeral=True)
+        return False
+   
+    server = get_server(interaction.guild.id)
+    if not server:
+        await interaction.followup.send(config.no_guild_message, ephemeral=True)
+        return False
+    
+    agent_id = int(server['roleId'])
+    part_id = int(server['partRoleId'])
+    agent_role = interaction.guild.get_role(agent_id)
+    part_role = interaction.guild.get_role(part_id)
+    if agent_role or part_role:
+        if not isinstance(interaction.user, discord.Member):
+            await interaction.followup.send(config.no_permission_clock_message, ephemeral=True)
+            return False
+        
+        if not (agent_role in interaction.user.roles or part_role in interaction.user.roles):
+            await interaction.followup.send(config.no_permission_clock_message, ephemeral=True)
+            return False
     return True

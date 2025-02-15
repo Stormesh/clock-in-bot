@@ -34,7 +34,8 @@ async def add_data(new_data: dict[str, str | int], file_path: str):
     await save_data(file_path)
 
 def get_user(user_id: int):
-    return next((user for user in user_data if user['id'] == user_id), None)
+    user_dict = {user['id']: user for user in user_data}
+    return user_dict.get(user_id)
 
 def remove_user(user_id: int):
     try:
@@ -46,14 +47,15 @@ def remove_user(user_id: int):
     except ValueError:
         print('User not found in user_data.')
 
-def get_server(server_id: int | None):
-    return next((server for server in get_data() if server['id'] == server_id), None)
+def get_server(server_id: int):
+    server_dict = {server['id']: server for server in get_data()}
+    return server_dict.get(server_id)
 
 def is_clocked_in(user_id: int):
     user = get_user(user_id)
     return user and (user['isClockedIn'] or user['onBreak'] or user['onMeeting'])
 
-def get_current_time(user_id: int) -> int:
+def get_current_time(user_id: int):
     user = get_user(user_id)
     if not user:
         return 0

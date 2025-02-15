@@ -3,9 +3,9 @@ import AdminNavLink from './AdminNavLink'
 
 const AdminNav = () => {
   return (
-    <nav className='flex bg-purple-300/35'>
+    <nav className='fixed w-full md:static flex bg-table-border'>
         <AdminNavLink href='/admin/users' text='Manage Users' />
-        <AdminNavLink href='/admin/logs' text='Logs' />
+        <AdminNavLink href='/admin/logs/1' activePath='/admin/logs' text='Logs' />
     </nav>
   )
 }

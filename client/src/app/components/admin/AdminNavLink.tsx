@@ -7,15 +7,18 @@ import React, { FC } from "react";
 interface IAdminNavLinkProps {
   href: string;
   text: string;
+  activePath?: string;
 }
 
-const AdminNavLink: FC<IAdminNavLinkProps> = ({ href, text }) => {
+const AdminNavLink: FC<IAdminNavLinkProps> = ({ href, text, activePath }) => {
   const path = usePathname();
 
   return (
     <Link
       className={`font-bold p-2 border-b-3 transition-all duration-300 text-white ${
-        path === href ? "underline border-purple-300" : "border-transparent hover:border-purple-300"
+        path === href || (activePath && path.includes(activePath))
+          ? "underline border-purple-300"
+          : "border-transparent hover:border-purple-300"
       }`}
       href={href}
     >

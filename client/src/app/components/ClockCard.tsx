@@ -58,7 +58,7 @@ const ClockCard: FC<IUserProps> = ({
 
   return (
     <>
-      <tr className="bg-card-bg even:bg-[#3b3553] border-2 border-table-border border-b-transparent text-lg md:text-3xl">
+      <tr className="bg-card-bg border-2 border-table-border border-b-transparent text-lg md:text-3xl">
         <td>
           <div className="mx-2 md:mx-3 my-1 flex flex-col items-center justify-center">
             <Image
@@ -75,10 +75,14 @@ const ClockCard: FC<IUserProps> = ({
         {timeElement(meetingTime, onMeeting, "📅")}
         {timeElement(breakTime, onBreak, "☕")}
       </tr>
-      <tr className="bg-card-bg even:bg-[#3b3553]">
+      <tr className="bg-card-bg">
         <td colSpan={4}>
-          <WarnButton userId={id} />
-          <KickButton userId={id} />
+          <div className="flex items-center justify-center">
+            <div className="bg-linear-to-t p-2 from-card-bg to-table-border rounded-t-full w-1/2">
+              <WarnButton userId={id} />
+              <KickButton userId={id} />
+            </div>
+          </div>
         </td>
       </tr>
     </>

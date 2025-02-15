@@ -22,9 +22,9 @@ interface IUsersTableProps {
 const AdminUsers: FC<IUsersTableProps> = ({ users }) => {
   const [usersList, setUsersList] = useState<PopulatedUser[]>(users);
   const [value, setValue] = useState(users.map((user) => user.roleId.name));
-  const {show, text, resetPopup, onConfirm, onDismiss} = usePopupStore();
+  const { show, text, resetPopup, onConfirm, onDismiss } = usePopupStore();
 
-  const {data: session} = useSession();
+  const { data: session } = useSession();
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
@@ -73,10 +73,14 @@ const AdminUsers: FC<IUsersTableProps> = ({ users }) => {
 
   const handleUpdateUser = (id: Types.ObjectId, roleName: string) => {
     try {
-      usePopupStore.setState({show: true, text: "Are you sure you want to update this user?", onConfirm: async () => {
-        await updateUser(id, roleName);
-        resetPopup();
-      }})
+      usePopupStore.setState({
+        show: true,
+        text: "Are you sure you want to update this user?",
+        onConfirm: async () => {
+          await updateUser(id, roleName);
+          resetPopup();
+        },
+      });
     } catch (error) {
       console.error(error);
     }
@@ -110,12 +114,12 @@ const AdminUsers: FC<IUsersTableProps> = ({ users }) => {
   const handleDeleteUser = (id: Types.ObjectId) => {
     try {
       usePopupStore.setState({
-        show: true, 
-        text: "Are you sure you want to delete this user?", 
+        show: true,
+        text: "Are you sure you want to delete this user?",
         onConfirm: async () => {
           await deleteUser(id);
           resetPopup();
-        }
+        },
       });
     } catch (error) {
       console.error(error);
@@ -167,7 +171,10 @@ const AdminUsers: FC<IUsersTableProps> = ({ users }) => {
                   ) && (
                     <button
                       onClick={() =>
-                        handleUpdateUser(user._id as Types.ObjectId, value[index])
+                        handleUpdateUser(
+                          user._id as Types.ObjectId,
+                          value[index]
+                        )
                       }
                       className={`bg-green-800 hover:bg-green-600 hover:scale-95 font-bold transition-all rounded-lg p-1 m-1 cursor-pointer`}
                     >
@@ -178,7 +185,9 @@ const AdminUsers: FC<IUsersTableProps> = ({ users }) => {
                     "delete-user"
                   ) && (
                     <button
-                      onClick={() => handleDeleteUser(user._id as Types.ObjectId)}
+                      onClick={() =>
+                        handleDeleteUser(user._id as Types.ObjectId)
+                      }
                       className={`bg-red-800 hover:bg-red-600 hover:scale-95 font-bold transition-all rounded-lg p-1 m-1 cursor-pointer`}
                     >
                       Delete

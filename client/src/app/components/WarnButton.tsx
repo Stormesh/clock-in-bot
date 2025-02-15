@@ -4,20 +4,17 @@ import PopupButton from "./PopupButton";
 import { usePopupStore } from "../zustand/popupStore";
 import { dmDiscordUser } from "../actions/actions";
 
-interface IWarnButtonProps {
+interface IWarnProps {
   userId: string;
 }
 
-const WarnButton: FC<IWarnButtonProps> = ({ userId }) => {
-  const {
-    onDismiss,
-    resetPopup,
-  } = usePopupStore();
+const FormWarn: FC<IWarnProps> = ({ userId }) => {
+  const { onDismiss, resetPopup } = usePopupStore();
 
-  const warn = async (event: React.FormEvent) => {
+  const handleFormSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+
     try {
-      event.preventDefault();
-
       const formData = new FormData(event.target as HTMLFormElement);
       await dmDiscordUser(userId, formData);
       resetPopup();
@@ -26,25 +23,29 @@ const WarnButton: FC<IWarnButtonProps> = ({ userId }) => {
     }
   };
 
+  return (
+    <form className="flex flex-col flex-wrap" onSubmit={handleFormSubmit}>
+      <h3 className="text-center text-xl">Enter the reason</h3>
+      <textarea
+        className="bg-purple-100 text-black p-2 rounded-md m-2"
+        name="message"
+        placeholder="Reason"
+      />
+      <div className="flex justify-center items-center">
+        <PopupButton text="Warn" isSubmit={true} />
+        <PopupButton text="Cancel" onClick={onDismiss} />
+      </div>
+    </form>
+  );
+};
+
+const WarnButton: FC<IWarnProps> = ({ userId }) => {
   const handleWarn = () => {
     try {
       usePopupStore.setState({
         show: true,
         header: "Warn",
-        text: (
-          <form className="flex flex-col flex-wrap" onSubmit={warn}>
-            <h3 className="text-center text-xl">Enter the reason</h3>
-            <textarea
-              className="bg-purple-100 text-black p-2 rounded-md m-2"
-              name="message"
-              placeholder="Reason"
-            />
-            <div>
-              <PopupButton text="Warn" isSubmit={true} />
-              <PopupButton text="Cancel" onClick={onDismiss} />
-            </div>
-          </form>
-        ),
+        text: <FormWarn userId={userId} />,
         isSubmit: true,
       });
     } catch (error) {

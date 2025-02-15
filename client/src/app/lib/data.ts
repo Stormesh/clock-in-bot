@@ -118,6 +118,34 @@ export const getLogs = async () => {
   }
 };
 
+export const getLogsPerPage = async (page: number, limit: number) => {
+  try {
+    await connectDB();
+    const logs = await Log.find()
+      .populate("userId", "username")
+      .populate("roleId", "name")
+      .lean()
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
+    return logs;
+  } catch (error) {
+    console.error(error);
+    throw new Error("Failed to get logs");
+  }
+}
+
+export const getTotalLogsPages = async (limit: number) => {
+  try {
+    await connectDB();
+    const totalLogs = await Log.countDocuments();
+    return Math.ceil(totalLogs / limit);
+  } catch (error) {
+    console.error(error);
+    throw new Error("Failed to get total logs pages");
+  }
+}
+
 export const createLog = async (log: ILog) => {
   try {
     await connectDB();

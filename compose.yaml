@@ -21,8 +21,8 @@ services:
       - ./client/.env.production.local
     networks:
       - clock-network
-    expose:
-      - 3000
+    ports:
+      - 3000:3000
   server:
     build: ./server
     container_name: clock-discord
@@ -35,25 +35,8 @@ services:
       - ./server/modules/data:/app/modules/data
     ports:
       - 7546:7546
-  caddy:
-    image: caddy:2-alpine
-    container_name: clock-caddy
-    depends_on:
-      - web
-      - server
-    ports:
-      - 80:80
-      - 443:443
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
-      - caddy_data:/data
-      - caddy_config:/config
-    networks:
-      - clock-network
 volumes:
   db-data:
-  caddy_data:
-  caddy_config:
 networks:
   clock-network:
     driver: bridge

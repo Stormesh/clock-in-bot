@@ -7,15 +7,11 @@ import { usePopupStore } from "../zustand/popupStore";
 import { dmDiscordUser } from "../actions/actions";
 import GearSpin from "./GearSpin";
 
-interface IKickButtonProps {
+interface IKickProps {
   userId: string;
 }
 
-interface IFormKickProps {
-  userId: string;
-}
-
-const FormKick: FC<IFormKickProps> = ({ userId }) => {
+const FormKick: FC<IKickProps> = ({ userId }) => {
   const { onDismiss, resetPopup } = usePopupStore();
 
   const [loading, setLoading] = useState<boolean>(false);
@@ -56,7 +52,7 @@ const FormKick: FC<IFormKickProps> = ({ userId }) => {
   );
 }
 
-const KickButton: FC<IKickButtonProps> = ({ userId }) => {
+const KickButton: FC<IKickProps> = ({ userId }) => {
   const handleKick = () => {
     try {
       usePopupStore.setState({

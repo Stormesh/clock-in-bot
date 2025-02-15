@@ -1,36 +1,17 @@
 import discord
+import asyncio
 import modules.config as config
 
 from modules.clock_funcs import check_role, clock_in, clock_out, meeting_in, break_in, view_time
 from modules.general_data import get_user, remove_user, get_server
 from modules.dis_data import remove_role, add_role
 from modules.bot_init import bot
+from modules.log_manager import LogManager
 import modules.clock_str as clock_str
-
-class LogManager:
-    @staticmethod
-    def get_log_channel(guild: discord.Guild):
-        server = get_server(guild.id)
-        if not server or not guild:
-            return None
-        
-        log_id = int(server['logId'])
-        log_channel = guild.get_channel(log_id)
-        
-        if not isinstance(log_channel, discord.TextChannel):
-            return None
-        
-        return log_channel
-    
-    @staticmethod
-    async def send_log_message(guild: discord.Guild, embed: discord.Embed):
-        log_channel = LogManager.get_log_channel(guild)
-        if isinstance(log_channel, discord.TextChannel):
-            await log_channel.send(embed=embed)
 
 async def perform_clock_out(user_id: int, guild_id: int, kick: bool = False):
     user = get_user(user_id)
-    if not user or not user['isClockedIn']:
+    if not user or not user['clockTime'] > 1:
         return False
 
     guild = bot.get_guild(guild_id)
@@ -65,9 +46,16 @@ async def perform_clock_out(user_id: int, guild_id: int, kick: bool = False):
     clock_in_id = server.get('clockRoleId')
     break_id = server.get('breakRoleId')
     meeting_id = server.get('meetingRoleId')
-    await remove_role(member, clock_in_id)
-    await remove_role(member, break_id)
-    await remove_role(member, meeting_id)
+    # await remove_role(member, clock_in_id)
+    # await remove_role(member, break_id)
+    # await remove_role(member, meeting_id)
+    remove_clock = asyncio.create_task(remove_role(member, clock_in_id))
+    remove_break = asyncio.create_task(remove_role(member, break_id))
+    remove_meeting = asyncio.create_task(remove_role(member, meeting_id))
+
+    await remove_clock
+    await remove_break
+    await remove_meeting
 
     return out_response
 
@@ -112,8 +100,12 @@ class ClockInView(discord.ui.View):
                 await interaction.followup.send(config.cant_reset_time_message, ephemeral=True)
                 return
 
-        server = get_server(interaction.guild_id)
-        if not server or not interaction.guild:
+        if not interaction.guild:
+            await interaction.followup.send(config.no_guild_message, ephemeral=True)
+            return
+        
+        server = get_server(interaction.guild.id)
+        if not server:
             await interaction.followup.send(config.no_guild_message, ephemeral=True)
             return
         
@@ -125,10 +117,17 @@ class ClockInView(discord.ui.View):
             return
         
         clockInId = server.get('clockRoleId')
-        await add_role(interaction.user, interaction.guild, clockInId)
+        add_clock_role = asyncio.create_task(add_role(interaction.user, interaction.guild, clockInId))
+        reply_clock = asyncio.create_task(interaction.followup.send(config.clock_in_message, ephemeral=True))
+        clock_in_task = asyncio.create_task(clock_in(interaction, interaction.user))
 
-        await interaction.followup.send(config.clock_in_message, ephemeral=True)
-        await clock_in(interaction, interaction.user)
+        await add_clock_role
+        await reply_clock
+        await clock_in_task
+        # await add_role(interaction.user, interaction.guild, clockInId)
+
+        # await interaction.followup.send(config.clock_in_message, ephemeral=True)
+        # await clock_in(interaction, interaction.user)
         
 
     #Clock Out
@@ -157,8 +156,12 @@ class ClockInView(discord.ui.View):
         if not user['clockTime'] > 1 or user['onBreak']:
             return
 
-        server = get_server(interaction.guild_id)
-        if not server or not interaction.guild:
+        if not interaction.guild:
+            await interaction.followup.send(config.no_guild_message, ephemeral=True)
+            return
+
+        server = get_server(interaction.guild.id)
+        if not server:
             await interaction.followup.send(config.no_guild_message, ephemeral=True)
             return
         
@@ -173,11 +176,20 @@ class ClockInView(discord.ui.View):
         meeting_id = server.get('meetingRoleId')
         break_id = server.get('breakRoleId')
 
-        await remove_role(interaction.user, clock_in_id)
-        await remove_role(interaction.user, meeting_id)
-        await add_role(interaction.user, interaction.guild, break_id)
+        remove_clock_role = asyncio.create_task(remove_role(interaction.user, clock_in_id))
+        remove_meeting_role = asyncio.create_task(remove_role(interaction.user, meeting_id))
+        add_break_role = asyncio.create_task(add_role(interaction.user, interaction.guild, break_id))
+        break_in_task = asyncio.create_task(break_in(interaction, interaction.user))
 
-        await break_in(interaction, interaction.user)
+        await remove_clock_role
+        await remove_meeting_role
+        await add_break_role
+        await break_in_task
+        # await remove_role(interaction.user, clock_in_id)
+        # await remove_role(interaction.user, meeting_id)
+        # await add_role(interaction.user, interaction.guild, break_id)
+
+        # await break_in(interaction, interaction.user)
 
 
 
@@ -195,8 +207,12 @@ class ClockInView(discord.ui.View):
             await interaction.followup.send(config.no_interaction_message, ephemeral=True)
             return
 
-        server = get_server(interaction.guild_id)
-        if not server or not interaction.guild:
+        if not interaction.guild:
+            await interaction.followup.send(config.no_guild_message, ephemeral=True)
+            return
+
+        server = get_server(interaction.guild.id)
+        if not server:
             await interaction.followup.send(config.no_guild_message, ephemeral=True)
             return
 
@@ -242,11 +258,20 @@ class ClockInView(discord.ui.View):
         meeting_id = server.get('meetingRoleId')
         clock_in_id = server.get('clockRoleId')
 
-        await remove_role(interaction.user, break_id)
-        await remove_role(interaction.user, meeting_id)
-        await add_role(interaction.user, interaction.guild, clock_in_id)
+        add_clock_role = asyncio.create_task(add_role(interaction.user, interaction.guild, clock_in_id))
+        remove_break_role = asyncio.create_task(remove_role(interaction.user, break_id))
+        remove_meeting_role = asyncio.create_task(remove_role(interaction.user, meeting_id))
+        clock_in_task = asyncio.create_task(clock_in(interaction, interaction.user, True))
 
-        await clock_in(interaction, interaction.user, True)
+        await add_clock_role
+        await remove_break_role
+        await remove_meeting_role
+        await clock_in_task
+        # await remove_role(interaction.user, break_id)
+        # await remove_role(interaction.user, meeting_id)
+        # await add_role(interaction.user, interaction.guild, clock_in_id)
+
+        # await clock_in(interaction, interaction.user, True)
         
 
     #View Time
@@ -284,8 +309,12 @@ class ClockInView(discord.ui.View):
             await interaction.followup.send(config.not_clocked_in_message, ephemeral=True)
             return
         
-        server = get_server(interaction.guild_id)
-        if not server or not interaction.guild:
+        if not interaction.guild:
+            await interaction.followup.send(config.no_guild_message, ephemeral=True)
+            return
+        
+        server = get_server(interaction.guild.id)
+        if not server:
             await interaction.followup.send(config.no_guild_message, ephemeral=True)
             return
 
@@ -301,8 +330,17 @@ class ClockInView(discord.ui.View):
         break_role_id = server.get('breakRoleId')
         meeting_role_id = server.get('meetingRoleId')
 
-        await remove_role(interaction.user, clock_role_id)
-        await remove_role(interaction.user, break_role_id)
-        await add_role(interaction.user, interaction.guild, meeting_role_id)
+        add_meeting_role = asyncio.create_task(add_role(interaction.user, interaction.guild, meeting_role_id))
+        remove_break_role = asyncio.create_task(remove_role(interaction.user, break_role_id))
+        remove_clock_role = asyncio.create_task(remove_role(interaction.user, clock_role_id))
+        meeting_in_task = asyncio.create_task(meeting_in(interaction, interaction.user))
 
-        await meeting_in(interaction, interaction.user)
+        await add_meeting_role
+        await remove_break_role
+        await remove_clock_role
+        await meeting_in_task
+        # await remove_role(interaction.user, clock_role_id)
+        # await remove_role(interaction.user, break_role_id)
+        # await add_role(interaction.user, interaction.guild, meeting_role_id)
+
+        # await meeting_in(interaction, interaction.user)

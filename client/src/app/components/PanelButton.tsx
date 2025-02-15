@@ -21,13 +21,13 @@ const PanelButton: FC<IPanelButtons> = ({
   return isLink ? (
     <Link
       href={link}
-      className={`${color} mx-2 ${hoverColor} select-none hover:scale-110 transition-all duration-300 text-white font-bold py-2 px-4 rounded mt-4 cursor-pointer`}
+      className={`${color} mx-2 ${hoverColor} select-none hover:scale-110 transition-all duration-300 text-white font-bold py-2 px-4 rounded cursor-pointer`}
     >
       {text}
     </Link>
   ) : (
     <button
-      className={`${color} mx-2 ${hoverColor} select-none hover:scale-110 transition-all duration-300 text-white font-bold py-2 px-4 rounded mt-4 cursor-pointer`}
+      className={`${color} mx-2 ${hoverColor} select-none hover:scale-110 transition-all duration-300 text-white font-bold py-2 px-4 rounded cursor-pointer`}
       onClick={onClick}
     >
       {text}

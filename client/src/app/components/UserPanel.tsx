@@ -12,7 +12,7 @@ const UserPanel = async () => {
         Welcome <br />
         <span className="font-bold text-3xl">{session?.user?.name}!</span>
       </h2>
-      <div className="flex justify-center items-center">
+      <div className="flex justify-center items-center mt-2">
         {session?.user?.roleId &&
           session?.user?.roleId.permissions?.includes("sign-up") && (
             <PanelButton text="Sign Up" color="bg-fuchsia-900" hoverColor="hover:bg-fuchsia-500" isLink link="/signup" />

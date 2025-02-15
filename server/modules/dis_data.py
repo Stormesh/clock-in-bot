@@ -44,7 +44,10 @@ async def send_dm(user: discord.Member, message: str):
         print(f'Error while sending message to {user.display_name}: {e}')
 
 def get_shift_time(interaction: discord.Interaction, _user: discord.Member) -> int:
-    server = get_server(interaction.guild_id)
+    if not interaction.guild:
+        return 0
+    
+    server = get_server(interaction.guild.id)
 
     if not server or not interaction.guild:
         return 0

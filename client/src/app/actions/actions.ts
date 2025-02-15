@@ -11,6 +11,8 @@ import {
   getRoles,
   getLogs,
   createLog,
+  getLogsPerPage,
+  getTotalLogsPages,
 } from "../lib/data";
 import { ILog, IRole, IUser, PopulatedLog, PopulatedUser } from "../lib/models";
 import { signUpSchema } from "../lib/zod";
@@ -236,6 +238,26 @@ export const getLogsAction = async () => {
     throw new Error("Failed to get logs");
   }
 };
+
+export const getLogsPerPageAction = async (page: number, limit: number) => {
+  try {
+    const logs = await getLogsPerPage(page, limit);
+    return logs as PopulatedLog[];
+  } catch (error) {
+    console.error(error);
+    throw new Error("Failed to get logs");
+  }
+};
+
+export const getTotalLogsPagesAction = async (limit: number) => {
+  try {
+    const logs = await getTotalLogsPages(limit);
+    return logs;
+  } catch (error) {
+    console.error(error);
+    throw new Error("Failed to get logs");
+  }
+}
 
 export const createLogAction = async (log: ILog) => {
   try {
