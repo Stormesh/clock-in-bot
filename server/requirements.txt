@@ -8,3 +8,6 @@ quart
 quart-cors
 uvicorn
 python-socketio
+sqlmodel
+psycopg2-binary
+alembic

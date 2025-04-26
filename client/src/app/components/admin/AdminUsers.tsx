@@ -2,24 +2,26 @@
 
 import React, { FC, Suspense, useState } from "react";
 import InputField from "@components/InputField";
-import { Action, IRole, PopulatedUser, Severity } from "../../lib/models";
-import {
-  createLogAction,
-  deleteUserAction,
-  getRoleAction,
-  updateUserAction,
-} from "../../actions/actions";
+import { IRole, PopulatedUser } from "../../lib/models";
+import { Action, Permissions, Severity } from "../../lib/enums";
+import { deleteUserAction, updateUserAction } from "../../actions/users";
+import { getRoleAction } from "../../actions/roles";
+import { createLogAction } from "../../actions/logs";
 import { Types } from "mongoose";
 import { useSession } from "next-auth/react";
 import GearSpin from "../GearSpin";
 import { usePopupStore } from "../../zustand/popupStore";
 import Popup from "../Popup";
+import AdminButton from "./AdminButton";
 
 interface IUsersTableProps {
   users: PopulatedUser[];
+  initialRoleNames: string[];
 }
 
-const AdminUsers: FC<IUsersTableProps> = ({ users }) => {
+const AdminUsers: FC<IUsersTableProps> = ({ users, initialRoleNames }) => {
+  const roleNames: string[] = initialRoleNames;
+
   const [usersList, setUsersList] = useState<PopulatedUser[]>(users);
   const [value, setValue] = useState(users.map((user) => user.roleId.name));
   const { show, text, resetPopup, onConfirm, onDismiss } = usePopupStore();
@@ -59,8 +61,8 @@ const AdminUsers: FC<IUsersTableProps> = ({ users }) => {
         await createLogAction({
           userId: session.user.id,
           roleId: session.user.roleId._id,
-          action: Action.UPDATE,
-          severity: Severity.MEDIUM,
+          action: Action.Update,
+          severity: Severity.Medium,
           description: `${session.user.name} has updated ${updatedUser.username}'s role to ${role.name}`,
           createdAt: new Date(),
         });
@@ -100,8 +102,8 @@ const AdminUsers: FC<IUsersTableProps> = ({ users }) => {
         await createLogAction({
           userId: session.user.id,
           roleId: session.user.roleId._id,
-          action: Action.DELETE,
-          severity: Severity.MEDIUM,
+          action: Action.Delete,
+          severity: Severity.Medium,
           description: `${session.user.name} has deleted ${deletedUser?.username}`,
           createdAt: new Date(),
         });
@@ -159,7 +161,7 @@ const AdminUsers: FC<IUsersTableProps> = ({ users }) => {
               <td>
                 <InputField
                   name="roleId"
-                  select={["User", "Admin"]}
+                  select={roleNames}
                   onChange={(e) => handleChange(e, index)}
                   value={value[index]}
                 />
@@ -167,31 +169,46 @@ const AdminUsers: FC<IUsersTableProps> = ({ users }) => {
               <td className="select-none text-center">
                 <Suspense fallback={<GearSpin />}>
                   {session?.user?.roleId?.permissions?.includes(
-                    "update-user"
+                    Permissions.Update
                   ) && (
-                    <button
-                      onClick={() =>
+                    // <button
+                    //   onClick={() =>
+                    //     handleUpdateUser(
+                    //       user._id as Types.ObjectId,
+                    //       value[index]
+                    //     )
+                    //   }
+                    //   className={`bg-green-800 hover:bg-green-600 hover:scale-95 font-bold transition-all rounded-lg p-1 m-1 cursor-pointer`}
+                    // >
+                    //   Update
+                    // </button>
+                    <AdminButton
+                      clickEvent={() =>
                         handleUpdateUser(
                           user._id as Types.ObjectId,
                           value[index]
                         )
                       }
-                      className={`bg-green-800 hover:bg-green-600 hover:scale-95 font-bold transition-all rounded-lg p-1 m-1 cursor-pointer`}
-                    >
-                      Update
-                    </button>
+                      text="Update"
+                    />
                   )}
                   {session?.user?.roleId?.permissions?.includes(
-                    "delete-user"
+                    Permissions.Delete
                   ) && (
-                    <button
-                      onClick={() =>
+                    // <button
+                    //   onClick={() =>
+                    //     handleDeleteUser(user._id as Types.ObjectId)
+                    //   }
+                    //   className={`bg-red-800 hover:bg-red-600 hover:scale-95 font-bold transition-all rounded-lg p-1 m-1 cursor-pointer`}
+                    // >
+                    //   Delete
+                    // </button>
+                    <AdminButton
+                      clickEvent={() =>
                         handleDeleteUser(user._id as Types.ObjectId)
                       }
-                      className={`bg-red-800 hover:bg-red-600 hover:scale-95 font-bold transition-all rounded-lg p-1 m-1 cursor-pointer`}
-                    >
-                      Delete
-                    </button>
+                      text="Delete"
+                    />
                   )}
                 </Suspense>
               </td>

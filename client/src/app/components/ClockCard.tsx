@@ -3,6 +3,8 @@ import Image from "next/image";
 import styles from "@/styles/clock.module.css";
 import WarnButton from "./WarnButton";
 import KickButton from "./KickButton";
+import { Permissions } from "../lib/enums";
+import { useSession } from "next-auth/react";
 
 interface IUserProps {
   id: string;
@@ -27,6 +29,13 @@ const ClockCard: FC<IUserProps> = ({
   onBreak,
   onMeeting,
 }) => {
+  const { data: session } = useSession();
+
+  const canKickOrWarn = session?.user.roleId.permissions?.some(
+    (permission) =>
+      permission === Permissions.Kick || permission === Permissions.Warn
+  );
+
   const setZeros = (num: number) => {
     return num < 10 ? `0${num}` : num;
   };
@@ -58,7 +67,11 @@ const ClockCard: FC<IUserProps> = ({
 
   return (
     <>
-      <tr className="bg-card-bg border-2 border-table-border border-b-transparent text-lg md:text-3xl">
+      <tr
+        className={`bg-card-bg border-2 border-table-border ${
+          canKickOrWarn && "border-b-transparent"
+        } text-lg md:text-3xl`}
+      >
         <td>
           <div className="mx-2 md:mx-3 my-1 flex flex-col items-center justify-center">
             <Image
@@ -75,16 +88,22 @@ const ClockCard: FC<IUserProps> = ({
         {timeElement(meetingTime, onMeeting, "📅")}
         {timeElement(breakTime, onBreak, "☕")}
       </tr>
-      <tr className="bg-card-bg">
-        <td colSpan={4}>
-          <div className="flex items-center justify-center">
-            <div className="bg-linear-to-t p-2 from-card-bg to-table-border rounded-t-full w-1/2">
-              <WarnButton userId={id} />
-              <KickButton userId={id} />
+      {canKickOrWarn && (
+        <tr className="bg-card-bg">
+          <td colSpan={4}>
+            <div className="flex items-center justify-center">
+              <div className="bg-linear-to-t p-2 from-card-bg to-table-border rounded-t-full w-1/2">
+                {session?.user.roleId.permissions?.includes(
+                  Permissions.Warn
+                ) && <WarnButton userId={id} />}
+                {session?.user.roleId.permissions?.includes(
+                  Permissions.Kick
+                ) && <KickButton userId={id} />}
+              </div>
             </div>
-          </div>
-        </td>
-      </tr>
+          </td>
+        </tr>
+      )}
     </>
   );
 };

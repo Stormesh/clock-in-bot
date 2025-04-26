@@ -3,19 +3,23 @@ import Signup from "@components/signup/Signup";
 import { SessionProvider } from "next-auth/react";
 import { auth } from "@/src/auth";
 import Warning from "@components/Warning";
+import { Permissions } from "../lib/enums";
+import { getRoleNamesAction } from "../actions/roles";
+
+export const dynamic = "force-dynamic";
 
 const page = async () => {
+  const roleNames = await getRoleNamesAction();
+
   const session = await auth();
 
-  if (!session?.user.roleId.permissions?.includes("sign-up")) {
-    return (
-      <Warning />
-    );
+  if (!session?.user.roleId.permissions?.includes(Permissions.SignUp)) {
+    return <Warning />;
   }
 
   return (
     <SessionProvider>
-      <Signup />
+      <Signup initialRoleNames={roleNames} />
     </SessionProvider>
   );
 };

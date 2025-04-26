@@ -1,6 +1,6 @@
 name: clockin-bot
 services:
-  db:
+  webdb:
     image: mongo:4.4.6
     container_name: clock-mongodb
     networks:
@@ -11,7 +11,7 @@ services:
       - db-data:/data/db
   web:
     depends_on:
-      - db
+      - webdb
     build:
       context: ./client
     container_name: clock-web
@@ -25,6 +25,8 @@ services:
     ports:
       - 3000:3000
   server:
+    depends_on:
+      - serverdb
     build: ./server
     container_name: clock-discord
     env_file:
@@ -32,10 +34,23 @@ services:
       - ./server/.env.local
     networks:
       - clock-network
-    volumes:
-      - server-data:/app/modules/data
     ports:
       - 7546:7546
+  serverdb:
+    container_name: clock-postgres
+    image: postgres:17-alpine
+    volumes:
+      - server-data:/var/lib/postgresql/data
+    env_file:
+      - ./server/.env.local
+    environment:
+      - POSTGRES_HOST=serverdb
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=clockinbot
+    ports:
+      - 5430:5432
+    networks:
+      - clock-network
 volumes:
   db-data:
   server-data:

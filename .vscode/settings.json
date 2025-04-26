@@ -1,0 +1,6 @@
+{
+    "eslint.useFlatConfig": false,
+    "eslint.workingDirectories": [
+        "./client"
+    ],
+}

@@ -8,53 +8,11 @@ import {
   getUsers,
   updateUserById,
   deleteUserById,
-  getRoles,
-  getLogs,
-  createLog,
-  getLogsPerPage,
-  getTotalLogsPages,
 } from "../lib/data";
-import { ILog, IRole, IUser, PopulatedLog, PopulatedUser } from "../lib/models";
+import { IRole, IUser, PopulatedUser } from "../lib/models";
 import { signUpSchema } from "../lib/zod";
 import { Types } from "mongoose";
 
-const DISCORD_BOT_URL = process.env.DISCORD_BOT_URL;
-
-if (!DISCORD_BOT_URL) {
-  throw new Error("Can't connect to Discord Bot");
-}
-
-// Discord
-export const getDiscordData = async () => {
-  try {
-    const response = await fetch(`${DISCORD_BOT_URL}/api/users`);
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error(error);
-    throw new Error("Failed to get Discord data");
-  }
-};
-
-export const dmDiscordUser = async (userId: string, formData: FormData, method = "POST") => {
-  try {
-    const message = formData.get("message");
-    await fetch(`${DISCORD_BOT_URL}/api/users/dm/${userId}`, {
-      method: method,
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        message: message,
-      }),
-    });
-  } catch (error) {
-    console.error(error);
-    throw new Error("Failed to warn Discord user");
-  }
-};
-
-// User
 const transformUser = (user: IUser | PopulatedUser) => {
   const transformedUser = {
     ...user,
@@ -187,84 +145,4 @@ export const deleteUserAction = async (id: Types.ObjectId) => {
   }
 };
 
-// Role
-const transformRole = (role: IRole) => {
-  return {
-    ...role,
-    _id: role._id.toString(),
-  };
-};
 
-export const getRolesAction = async () => {
-  try {
-    const roles = await getRoles();
-    return roles;
-  } catch (error) {
-    console.error(error);
-    throw new Error(
-      error instanceof Error
-        ? `Failed to get roles: ${error.message}`
-        : "Failed to get roles"
-    );
-  }
-};
-
-export const getRoleAction = async (roleName: string) => {
-  try {
-    const role = await getRoleByName(roleName);
-
-    if (!role) {
-      throw new Error("Role not found");
-    }
-
-    const transformedRole = transformRole(role);
-
-    return transformedRole;
-  } catch (error) {
-    console.error(error);
-    throw new Error(
-      error instanceof Error ? error.message : "Failed to get role"
-    );
-  }
-};
-
-// Log
-export const getLogsAction = async () => {
-  try {
-    const logs = await getLogs();
-    return logs as PopulatedLog[];
-  } catch (error) {
-    console.error(error);
-    throw new Error("Failed to get logs");
-  }
-};
-
-export const getLogsPerPageAction = async (page: number, limit: number) => {
-  try {
-    const logs = await getLogsPerPage(page, limit);
-    return logs as PopulatedLog[];
-  } catch (error) {
-    console.error(error);
-    throw new Error("Failed to get logs");
-  }
-};
-
-export const getTotalLogsPagesAction = async (limit: number) => {
-  try {
-    const logs = await getTotalLogsPages(limit);
-    return logs;
-  } catch (error) {
-    console.error(error);
-    throw new Error("Failed to get logs");
-  }
-}
-
-export const createLogAction = async (log: ILog) => {
-  try {
-    await createLog(log);
-    return { success: "Log created successfully" };
-  } catch (error) {
-    console.error(error);
-    throw new Error("Failed to create log");
-  }
-};

@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import ClockCard from "@components/ClockCard";
 import ClockHeader from "@components/ClockHeader";
 import { io, Socket } from "socket.io-client";
-import { getDiscordData } from "../actions/actions";
+import { getDiscordData } from "../actions/discord";
 
 interface IUser {
   id: string;

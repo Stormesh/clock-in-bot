@@ -6,7 +6,9 @@ interface IInputFieldProps {
   select?: string[];
   grid?: boolean;
   defaultValue?: string;
-  onChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
+  onChange?: (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => void;
   value?: string;
   placeholder?: string;
   type?: string;
@@ -24,7 +26,11 @@ const InputField: FC<IInputFieldProps> = ({
   type,
 }) => {
   return (
-    <div className={`${grid ? "grid grid-cols-2 w-72" : "flex"} justify-center text-lg items-center m-2`}>
+    <div
+      className={`${
+        grid ? "grid grid-cols-2 w-72" : "flex"
+      } justify-center text-lg items-center m-2`}
+    >
       {labelText && (
         <label className="text-center block font-bold mr-2" htmlFor={name}>
           {labelText}

@@ -4,7 +4,7 @@ import React, { FC, useState } from "react";
 import PanelButton from "./PanelButton";
 import PopupButton from "./PopupButton";
 import { usePopupStore } from "../zustand/popupStore";
-import { dmDiscordUser } from "../actions/actions";
+import { dmDiscordUser } from "../actions/discord";
 import GearSpin from "./GearSpin";
 
 interface IKickProps {
@@ -50,7 +50,7 @@ const FormKick: FC<IKickProps> = ({ userId }) => {
       </div>
     </form>
   );
-}
+};
 
 const KickButton: FC<IKickProps> = ({ userId }) => {
   const handleKick = () => {
@@ -66,16 +66,7 @@ const KickButton: FC<IKickProps> = ({ userId }) => {
     }
   };
 
-  return (
-    <>
-      <PanelButton
-        text="Kick"
-        color="bg-red-900"
-        hoverColor="hover:bg-red-500"
-        onClick={handleKick}
-      />
-    </>
-  );
+  return <PanelButton text="Kick" onClick={handleKick} />;
 };
 
 export default KickButton;

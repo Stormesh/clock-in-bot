@@ -1,8 +1,9 @@
-import React, { FC } from "react";
+import React, { FC, useState } from "react";
 import PanelButton from "./PanelButton";
 import PopupButton from "./PopupButton";
 import { usePopupStore } from "../zustand/popupStore";
-import { dmDiscordUser } from "../actions/actions";
+import { dmDiscordUser } from "../actions/discord";
+import GearSpin from "./GearSpin";
 
 interface IWarnProps {
   userId: string;
@@ -11,15 +12,19 @@ interface IWarnProps {
 const FormWarn: FC<IWarnProps> = ({ userId }) => {
   const { onDismiss, resetPopup } = usePopupStore();
 
+  const [loading, setLoading] = useState<boolean>(false);
+
   const handleFormSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-
+    setLoading(true);
     try {
       const formData = new FormData(event.target as HTMLFormElement);
       await dmDiscordUser(userId, formData);
       resetPopup();
     } catch (error) {
       console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -32,8 +37,14 @@ const FormWarn: FC<IWarnProps> = ({ userId }) => {
         placeholder="Reason"
       />
       <div className="flex justify-center items-center">
-        <PopupButton text="Warn" isSubmit={true} />
-        <PopupButton text="Cancel" onClick={onDismiss} />
+        {loading ? (
+          <GearSpin />
+        ) : (
+          <>
+            <PopupButton text="Warn" isSubmit={true} />
+            <PopupButton text="Cancel" onClick={onDismiss} />
+          </>
+        )}
       </div>
     </form>
   );
@@ -53,16 +64,7 @@ const WarnButton: FC<IWarnProps> = ({ userId }) => {
     }
   };
 
-  return (
-    <>
-      <PanelButton
-        text="Warn"
-        color="bg-amber-900"
-        hoverColor="hover:bg-amber-500"
-        onClick={handleWarn}
-      />
-    </>
-  );
+  return <PanelButton text="Warn" onClick={handleWarn} />;
 };
 
 export default WarnButton;

@@ -1,17 +1,22 @@
 # Quart
-from quart import Quart, jsonify, request
-from quart_cors import cors # type: ignore
-import modules.socket as socket
+from modules.api import app
 
-app = Quart(__name__)
-cors(app)
-sio = socket.init_socket(app)
+# Data
+from modules.data.common import (
+    set_server,
+    get_channel,
+    set_channel,
+    get_channels_from_server,
+    remove_channel,
+)
 
-# Custom modules
-from modules.general_data import read_data, save_data, add_data
+from modules.data.models import Role
+
+# Config
 import modules.config as config
-from modules.general_data import user_data, get_user, get_server
-from modules.discord_clock import ClockInView, perform_clock_out
+
+# Bot Properties
+from modules.discord.clock import ClockInView
 from modules.env import load_env
 from modules.bot_init import bot
 
@@ -26,134 +31,156 @@ import uvicorn
 from typing import Optional
 
 load_env()
-BOT_TOKEN = os.getenv('BOT_TOKEN', '')
-FLASK_HOST = os.getenv('FLASK_HOST', '0.0.0.0')
-FLASK_PORT = os.getenv('FLASK_PORT', 7546)
+BOT_TOKEN = os.getenv("BOT_TOKEN", "")
+FLASK_HOST = os.getenv("FLASK_HOST", "0.0.0.0")
+FLASK_PORT = os.getenv("FLASK_PORT", 7546)
 
-@app.route('/api/users', methods=['GET'])
-def get_user_data():
-    users = [ # type: ignore
-        {**user, 'id': str(user['id']), 'guildId': str(user['guildId'])}
-        for user in user_data
-    ]
-    return jsonify(users)
-
-@app.route('/api/users/dm/<int:user_id>', methods=['POST', 'DELETE'])
-async def dm_user(user_id: str):
-    data = await request.get_json()
-    message = data['message']
-    user_id_int = int(user_id)
-    try:
-        user = bot.get_user(user_id_int)
-        if not user:
-            return jsonify({'error': 'User not found'}), 404
-        
-        if request.method == 'POST':
-            await user.send(f'You have been warned for: **{message}**')
-            return jsonify({'message': 'Message sent successfully'}), 200
-        if request.method == 'DELETE':
-            current_user = get_user(user_id_int)
-            if not current_user:
-                return jsonify({'error': 'User not found'}), 404
-            await user.send(f'You have been removed from the clock in bot for: **{message}**')
-            await perform_clock_out(user_id_int, current_user['guildId'], kick=True)
-            await sio.emit('update', {'message': f'{user.display_name} has been removed.'}) # type: ignore
-            return jsonify({'message': 'User deleted successfully'}), 200
-    except ValueError:
-        return jsonify({'error': 'User not found'}), 404
-
-    return jsonify({'error': 'User not found'}), 404
 
 async def clock(channel: discord.TextChannel, interaction: discord.Interaction):
-    embed = discord.Embed(title='Clock In/Out', description='Select an option below to clock in/out.', color=discord.Color.blurple())
+    embed = discord.Embed(
+        title="Clock In/Out",
+        description="Select an option below to clock in/out.",
+        color=discord.Color.blurple(),
+    )
     view = ClockInView()
     message = await channel.send(embed=embed, view=view)
 
-    server = get_server(channel.guild.id)
-    if server and interaction.guild:
-        clock_channel_id = int(server['clockId'])
-        clock_channel = interaction.guild.get_channel(clock_channel_id)
-        message_id = server.get('messageId')
-        if message_id and isinstance(clock_channel, discord.TextChannel):
-            old_message = await clock_channel.fetch_message(int(message_id))
-            if old_message:
-                await old_message.delete()
-        server['messageId'] = message.id
-        await save_data('modules/data/data.json')
+    if not interaction.guild:
+        return
+    clock_channel = get_channel(channel.id)
+    if clock_channel and clock_channel.message_id:
+        old_message = await channel.fetch_message(int(clock_channel.message_id))
+        if old_message:
+            await old_message.delete()
+    set_channel(channel.id, interaction.guild.id, message_id=message.id)
+
 
 @bot.event
 async def on_ready():
-    await read_data('modules/data/data.json')
-    print(f'Logged in as {bot.user}')
-
-    for guild in bot.guilds:
-        server = get_server(guild.id)
-        if server:
-            message_id = server.get('messageId')
-            if message_id:
-                clock_channel_id = int(server['clockId'])
-                clock_channel = bot.get_channel(clock_channel_id)
-                if isinstance(clock_channel, discord.TextChannel):
-                    old_message = await clock_channel.fetch_message(int(message_id))
-                    if old_message:
-                        await old_message.edit(view=ClockInView())
-        else:
-            await add_data({'id': guild.id}, 'modules/data.json')
-    
     try:
-        synced_commands = await bot.tree.sync()
-        print(f'Synced {len(synced_commands)} commands.')
-    except Exception as e:
-        print(f'Error syncing commands: {e}')
+        print(f"Logged in as {bot.user}")
 
-@bot.tree.command(name='setup', description='Sets up the clock app')
-async def setup(interaction: discord.Interaction, channel: discord.TextChannel, role: discord.Role, logs: discord.TextChannel, sheet_url: str, clock_role: Optional[discord.Role] = None, break_role: Optional[discord.Role] = None, meeting_role: Optional[discord.Role] = None, part_role: Optional[discord.Role] = None):
+        for guild in bot.guilds:
+            channels = get_channels_from_server(guild.id)
+            if channels:
+                for channel in channels:
+                    message_id = channel.message_id
+                    if message_id:
+                        clock_channel = bot.get_channel(channel.id)
+                        if isinstance(clock_channel, discord.TextChannel):
+                            old_message = await clock_channel.fetch_message(
+                                int(message_id)
+                            )
+                            if old_message:
+                                await old_message.edit(view=ClockInView())
+            else:
+                set_server(guild.id, guild.name)
+
+        try:
+            synced_commands = await bot.tree.sync()
+            print(f"Synced {len(synced_commands)} commands.")
+        except Exception as e:
+            print(f"Error syncing commands: {e}")
+    except Exception as e:
+        print(f"Error logging in: {e}")
+
+
+async def is_verified(interaction: discord.Interaction):
     if not interaction.guild:
         await interaction.response.send_message(config.no_guild_message, ephemeral=True)
+        return False
+
+    if (
+        isinstance(interaction.user, discord.Member)
+        and not interaction.user.guild_permissions.manage_channels
+    ):
+        await interaction.response.send_message(
+            config.no_permission_setup_message, ephemeral=True
+        )
+        return False
+
+    return True
+
+@bot.tree.command(name="setup", description="Sets up the clock app")
+async def setup(
+    interaction: discord.Interaction,
+    channel: discord.TextChannel,
+    name: str,
+    role: discord.Role,
+    logs: discord.TextChannel,
+    sheet_url: str,
+    clock_role: Optional[discord.Role] = None,
+    break_role: Optional[discord.Role] = None,
+    meeting_role: Optional[discord.Role] = None,
+    part_role: Optional[discord.Role] = None,
+):
+
+    if not await is_verified(interaction) or not interaction.guild:
         return
 
-    server = get_server(interaction.guild.id)
-    if not server:
-        return
+    roles_list = [Role(id=role.id, type="full")]
 
-    if isinstance(interaction.user, discord.Member) and not interaction.user.guild_permissions.manage_channels:
-        await interaction.response.send_message(config.no_permission_setup_message, ephemeral=True)
-        return
+    if clock_role:
+        roles_list.append(Role(id=clock_role.id, type="clock"))
 
-    server.update({
-        'clockId': channel.id,
-        'logId': logs.id,
-        'roleId': role.id,
-        'sheetUrl': sheet_url
-    })
+    if break_role:
+        roles_list.append(Role(id=break_role.id, type="break"))
 
-    def set_roles(role_data: dict[Optional[discord.Role], str]):
-        if not role_data:
-            return
-        
-        for role, role_key in role_data.items():
-            if role is None:
-                return server.pop(role_key, None)
+    if meeting_role:
+        roles_list.append(Role(id=meeting_role.id, type="meeting"))
 
-            server[role_key] = role.id
+    if part_role:
+        roles_list.append(Role(id=part_role.id, type="part"))
 
-    set_roles({
-        clock_role: 'clockRoleId',
-        break_role: 'breakRoleId',
-        meeting_role: 'meetingRoleId',
-        part_role: 'partRoleId'
-    })
+    set_channel(
+        channel.id,
+        interaction.guild.id,
+        name=name,
+        sheet_url=sheet_url,
+        log_id=logs.id,
+        roles=roles_list,
+    )
 
-    await save_data('modules/data/data.json')
-
-    await interaction.response.send_message(f'Clock app set up in {channel.mention}\nLogs channel set up in {logs.mention}\nUsers who can access the app need to have the {role.mention} role.', ephemeral=True)
+    await interaction.response.send_message(
+        f"Clock app set up in {channel.mention}\nLogs channel set up in {logs.mention}\nUsers who can access the app need to have the {role.mention} role.",
+        ephemeral=True,
+    )
     await clock(channel, interaction)
 
+
+@bot.tree.command(name="remove", description="Removes the clock app from the channel")
+async def remove(
+    interaction: discord.Interaction,
+    channel: discord.TextChannel,
+):
+
+    if not await is_verified(interaction):
+        return
+
+    _channel = get_channel(channel.id)
+    if not (_channel and _channel.message_id):
+        return
+
+    message = await channel.fetch_message(int(_channel.message_id))
+
+    if message:
+        await message.delete()
+
+    remove_channel(channel.id)
+
+    await interaction.response.send_message(f"Clock app removed from {channel.mention}", ephemeral=True)
+
+
 async def run_quart():
-    if FLASK_HOST and FLASK_PORT:
-        config_uvicorn = uvicorn.Config(app, host=FLASK_HOST, port=int(FLASK_PORT), log_level="info")
-        server = uvicorn.Server(config_uvicorn)
-        await server.serve()
+    if not (FLASK_HOST and FLASK_PORT):
+        print("FLASK_HOST and/or FLASK_PORT environment variables are not set.")
+        return
+    config_uvicorn = uvicorn.Config(
+        app, host=FLASK_HOST, port=int(FLASK_PORT), log_level="info"
+    )
+    server = uvicorn.Server(config_uvicorn)
+    await server.serve()
+
 
 async def main():
     quart_task = asyncio.create_task(run_quart())
@@ -161,6 +188,6 @@ async def main():
 
     await asyncio.gather(quart_task, discord_task)
 
-if __name__ == '__main__':
-    asyncio.run(main())
 
+if __name__ == "__main__":
+    asyncio.run(main())

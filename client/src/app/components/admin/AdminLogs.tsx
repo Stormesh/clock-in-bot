@@ -1,6 +1,7 @@
 import React, { FC } from "react";
-import { getLogsPerPageAction } from "../../actions/actions";
-import { PopulatedLog, Severity } from "../../lib/models";
+import { getLogsPerPageAction } from "../../actions/logs";
+import { PopulatedLog } from "../../lib/models";
+import { Severity } from "../../lib/enums";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUser, faUserTie } from "@fortawesome/free-solid-svg-icons";
 
@@ -13,6 +14,8 @@ const AdminLogs: FC<IAdminLogProps> = async ({ page, itemsPerPage }) => {
   const logs: PopulatedLog[] = await getLogsPerPageAction(page, itemsPerPage);
 
   const showRoleIcon = (log: PopulatedLog) => {
+    console.log(log);
+
     return (
       <abbr
         title={
@@ -22,7 +25,7 @@ const AdminLogs: FC<IAdminLogProps> = async ({ page, itemsPerPage }) => {
         <FontAwesomeIcon
           style={{ width: "30px", height: "30px" }}
           className="mr-1 hover:scale-125 transition-transform "
-          icon={log.roleId.name !== "user" ? faUserTie : faUser}
+          icon={log.roleId.priority < 2 ? faUserTie : faUser}
           color="white"
         />
       </abbr>
@@ -62,9 +65,9 @@ const AdminLogs: FC<IAdminLogProps> = async ({ page, itemsPerPage }) => {
             <td className="p-2">{log.action}</td>
             <td
               className={`p-2 ${
-                log.severity === Severity.LOW
+                log.severity === Severity.Low
                   ? "bg-blue-400/40"
-                  : log.severity === Severity.MEDIUM
+                  : log.severity === Severity.Medium
                   ? "bg-yellow-400/40"
                   : "bg-red-400/40"
               }`}

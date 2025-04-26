@@ -11,10 +11,11 @@ export default async function AdminLayout({
   const session = await auth();
 
   // Check if user is not an admin
-  if (session?.user.roleId.priority && session.user.roleId.priority >= 2 || !session) {
-    return (
-      <Warning />
-    );
+  if (
+    (session?.user.roleId.priority && session.user.roleId.priority >= 2) ||
+    !session
+  ) {
+    return <Warning />;
   }
 
   return (
@@ -24,11 +25,11 @@ export default async function AdminLayout({
         <div className="mt-[43px] md:mt-0">
           {children}
           <div className="flex justify-center">
-          <Link className="mt-2" href="/">
-            <button className="bg-green-700 hover:bg-green-500 hover:scale-105 transition-all p-2 font-bold rounded-lg text-white cursor-pointer">
-              Go back
-            </button>
-          </Link>
+            <Link className="mt-2" href="/">
+              <button className="bg-green-700 hover:bg-green-500 hover:scale-105 transition-all p-2 font-bold rounded-lg text-white cursor-pointer">
+                Go back
+              </button>
+            </Link>
           </div>
         </div>
       </main>

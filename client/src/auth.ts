@@ -6,8 +6,9 @@ import { signInSchema } from "./app/lib/zod";
 import { compare } from "bcryptjs";
 import { getUser } from "./app/lib/data";
 import { ZodError } from "zod";
-import { Action, PopulatedUser, Severity } from "./app/lib/models";
-import { createLogAction } from "./app/actions/actions";
+import { PopulatedUser } from "./app/lib/models";
+import { Action, Severity } from "./app/lib/enums";
+import { createLogAction } from "./app/actions/logs";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -47,8 +48,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           await createLogAction({
             userId: user._id,
             roleId: user.roleId._id,
-            action: Action.LOGIN,
-            severity: Severity.LOW,
+            action: Action.LogIn,
+            severity: Severity.Low,
             description: `${user.username} has logged in`,
             createdAt: new Date(),
           });

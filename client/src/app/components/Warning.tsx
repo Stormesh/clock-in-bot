@@ -1,5 +1,5 @@
-import Link from "next/link";
 import React, { FC } from "react";
+import PanelButton from "./PanelButton";
 
 interface IWarningProps {
   text?: string;
@@ -18,12 +18,7 @@ const Warning: FC<IWarningProps> = ({
         {text}
       </h2>
       {link && linkText && (
-        <Link
-          href={link}
-          className="bg-purple-700 hover:bg-purple-500 hover:scale-110 transition-all duration-300 text-white font-bold py-2 px-4 rounded mt-4 select-none"
-        >
-          {linkText}
-        </Link>
+        <PanelButton link={link} isLink text={linkText} />
       )}
     </div>
   );

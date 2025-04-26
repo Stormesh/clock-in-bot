@@ -102,6 +102,22 @@ export const getRoles = async () => {
   }
 };
 
+export const getRoleNames = async () => {
+  try {
+    await connectDB();
+    const roleNames = await Role.find()
+      .select("name")
+      .lean()
+      .sort({ name: -1 });
+    return (roleNames as IRole[])
+      .filter((role) => role.name !== "superadmin")
+      .map((role) => role.name.charAt(0).toUpperCase() + role.name.slice(1));
+  } catch (error) {
+    console.error(error);
+    throw new Error("Failed to get role names");
+  }
+};
+
 // Logs
 export const getLogs = async () => {
   try {
@@ -123,7 +139,7 @@ export const getLogsPerPage = async (page: number, limit: number) => {
     await connectDB();
     const logs = await Log.find()
       .populate("userId", "username")
-      .populate("roleId", "name")
+      .populate("roleId", "name priority")
       .lean()
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
@@ -133,7 +149,7 @@ export const getLogsPerPage = async (page: number, limit: number) => {
     console.error(error);
     throw new Error("Failed to get logs");
   }
-}
+};
 
 export const getTotalLogsPages = async (limit: number) => {
   try {
@@ -144,15 +160,16 @@ export const getTotalLogsPages = async (limit: number) => {
     console.error(error);
     throw new Error("Failed to get total logs pages");
   }
-}
+};
 
 export const createLog = async (log: ILog) => {
   try {
     await connectDB();
     const newLog = await Log.create(log);
+    console.log(newLog);
     return newLog;
   } catch (error) {
     console.error(error);
     throw new Error("Failed to create log");
   }
-}
+};

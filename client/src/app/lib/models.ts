@@ -1,4 +1,5 @@
 import mongoose, { Types } from "mongoose";
+import { Action, Severity } from "./enums";
 
 // User
 export interface IUser {
@@ -70,20 +71,6 @@ export interface ILog {
   severity: Severity | string;
   createdAt: Date;
   __v?: number
-}
-
-export enum Action {
-  LOGIN = "Login",
-  LOGOUT = "Logout",
-  CREATE = "Create",
-  UPDATE = "Update",
-  DELETE = "Delete",
-}
-
-export enum Severity {
-  LOW = "Info",
-  MEDIUM = "Warning",
-  HIGH = "Danger",
 }
 
 const logSchema = new mongoose.Schema({

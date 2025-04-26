@@ -1,21 +1,28 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, FC } from "react";
 import InputField from "@components/InputField";
 import Link from "next/link";
-import { createLogAction, createUserAction } from "../../actions/actions";
+import { createUserAction } from "../../actions/users";
+import { createLogAction } from "../../actions/logs";
 import { useSession } from "next-auth/react";
-import { Action, Severity } from "../../lib/models";
+import { Action, Severity } from "../../lib/enums";
 
-const Signup = () => {
+interface SignupProps {
+  initialRoleNames: string[];
+}
+
+const Signup: FC<SignupProps> = ({ initialRoleNames }) => {
+  const roleNames: string[] = initialRoleNames;
+
+  const { data: session } = useSession();
+
   enum indicatorState {
     success = 1,
     error = 0,
     none = -1,
   }
   const [indicator, setIndicator] = useState(indicatorState.none);
-
-  const {data: session} = useSession();
 
   enum indicatorTextState {
     created = "Account created successfully!",
@@ -30,7 +37,7 @@ const Signup = () => {
   const handleFormSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    const form = event.currentTarget
+    const form = event.currentTarget;
 
     try {
       const formData = new FormData(event.currentTarget);
@@ -44,11 +51,13 @@ const Signup = () => {
         await createLogAction({
           userId: session.user.id,
           roleId: session.user.roleId._id,
-          action: Action.CREATE,
-          severity: Severity.MEDIUM,
-          description: `${session.user.name} has created a new account for ${formData.get("username")}`,
+          action: Action.Create,
+          severity: Severity.Medium,
+          description: `${
+            session.user.name
+          } has created a new account for ${formData.get("username")}`,
           createdAt: new Date(),
-        })
+        });
       }
       form.reset();
     } catch (error) {
@@ -81,12 +90,7 @@ const Signup = () => {
           type="password"
           grid
         />
-        <InputField
-          name="role"
-          labelText="Role"
-          select={["User", "Admin"]}
-          grid
-        />
+        <InputField name="role" labelText="Role" select={roleNames} grid />
         {indicator !== indicatorState.none && (
           <h3
             className={`text-xl text-center whitespace-pre-line ${

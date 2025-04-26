@@ -2,6 +2,7 @@ import { auth } from "@/src/auth";
 import React from "react";
 import SignOutButton from "@components/SignOutButton";
 import PanelButton from "./PanelButton";
+import { Permissions } from "../lib/enums";
 
 const UserPanel = async () => {
   const session = await auth();
@@ -14,15 +15,24 @@ const UserPanel = async () => {
       </h2>
       <div className="flex justify-center items-center mt-2">
         {session?.user?.roleId &&
-          session?.user?.roleId.permissions?.includes("sign-up") && (
-            <PanelButton text="Sign Up" color="bg-fuchsia-900" hoverColor="hover:bg-fuchsia-500" isLink link="/signup" />
+          session?.user?.roleId.permissions?.includes(Permissions.SignUp) && (
+            <PanelButton
+              text="Sign Up"
+              isLink
+              link="/signup"
+            />
           )}
         {session?.user?.roleId &&
           session?.user.roleId.permissions?.some(
             (permission) =>
-              permission === "delete-user" || permission === "update-user"
+              permission === Permissions.Delete ||
+              permission === Permissions.Update
           ) && (
-            <PanelButton text="Admin" color="bg-blue-900" hoverColor="hover:bg-blue-500" isLink link="/admin" />
+            <PanelButton
+              text="Admin"
+              isLink
+              link="/admin"
+            />
           )}
         <SignOutButton />
       </div>

@@ -24,11 +24,7 @@ const SignOutButton = () => {
     }
   };
 
-  return (
-    <>
-      <PanelButton text="Sign Out" color="bg-pink-900" hoverColor="hover:bg-pink-500" onClick={handleSignOut} />
-    </>
-  );
+  return <PanelButton text="Sign Out" onClick={handleSignOut} />;
 };
 
 export default SignOutButton;
