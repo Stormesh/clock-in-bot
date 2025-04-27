@@ -40,21 +40,21 @@ services:
     container_name: clock-postgres
     image: postgres:17-alpine
     volumes:
-      - server-data:/var/lib/postgresql/data
+      - server-discord-data:/var/lib/postgresql/data
+    env_file:
+      - ./server/.env.local
     environment:
       - POSTGRES_HOST=serverdb
       - POSTGRES_PORT=5432
       - POSTGRES_DB=clockinbot
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
-    env_file:
-      - ./server/.env.local
     ports:
       - 5430:5432
     networks:
       - clock-network
 volumes:
   db-data:
-  server-data:
+  server-discord-data:
 networks:
   clock-network:
     driver: bridge
