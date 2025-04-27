@@ -44,10 +44,10 @@ services:
     env_file:
       - ./server/.env.local
     environment:
-      - DISCORD_PG_HOST=serverdb
-      - DISCORD_PG_PORT=5432
-      - DISCORD_PG_DB=clockinbot
-      - DATABASE_URL=postgresql://${DISCORD_PG_USER}:${DISCORD_PG_PASSWORD}@${DISCORD_PG_HOST}:${DISCORD_PG_PORT}/${DISCORD_PG_DB}
+      - POSTGRES_HOST=serverdb
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=clockinbot
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
     ports:
       - 5430:5432
     networks:
