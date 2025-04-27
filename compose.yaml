@@ -44,9 +44,11 @@ services:
     env_file:
       - ./server/.env.local
     environment:
-      - POSTGRES_HOST=serverdb
-      - POSTGRES_PORT=5432
-      - POSTGRES_DB=clockinbot
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_HOST=${POSTGRES_HOST:-serverdb}
+      - POSTGRES_PORT=${POSTGRES_PORT:-5432}
+      - POSTGRES_DB=${POSTGRES_DB:-clockinbot}
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
     ports:
       - 5430:5432
