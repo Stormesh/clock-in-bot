@@ -61,24 +61,39 @@ async def on_ready():
         print(f"Logged in as {bot.user}")
 
         for guild in bot.guilds:
-            channels = get_channels_from_server(guild.id)
-            if channels:
-                for channel in channels:
-                    message_id = channel.message_id
-                    if message_id:
-                        clock_channel = bot.get_channel(channel.id)
-                        if isinstance(clock_channel, discord.TextChannel):
-                            old_message = await clock_channel.fetch_message(
-                                int(message_id)
-                            )
-                            if old_message:
-                                await old_message.edit(view=ClockInView())
-            else:
-                set_server(guild.id, guild.name)
+            if guild:
+                channels = get_channels_from_server(guild.id)
+                if channels:
+                    for channel in channels:
+                        if channel:
+                            message_id = channel.message_id
+                            if message_id:
+                                clock_channel = bot.get_channel(channel.id)
+                                if isinstance(clock_channel, discord.TextChannel):
+                                    try:
+                                        old_message = await clock_channel.fetch_message(
+                                            int(message_id)
+                                        )
+                                        if old_message:
+                                            await old_message.edit(
+                                                view=ClockInView()
+                                            )
+                                    except discord.NotFound:
+                                        print(
+                                            f"Could not find message {message_id} in channel {clock_channel.name}"
+                                        )
+                else:
+                    set_server(guild.id, guild.name)
 
         try:
             synced_commands = await bot.tree.sync()
             print(f"Synced {len(synced_commands)} commands.")
+        except discord.Forbidden:
+            print(
+                "Missing permissions to sync commands. Make sure the bot has the `applications.commands` privilege."
+            )
+        except discord.HTTPException as e:
+            print(f"Error syncing commands: {e.status} {e.text}")
         except Exception as e:
             print(f"Error syncing commands: {e}")
     except Exception as e:
