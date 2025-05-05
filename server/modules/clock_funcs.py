@@ -289,42 +289,40 @@ def view_time(interaction: discord.Interaction):
 
 
 async def check_role(interaction: discord.Interaction):
-    if not (
-        interaction.guild
-        and interaction.channel
-        and isinstance(interaction.channel, discord.TextChannel)
+    if not interaction.guild or not interaction.channel or not isinstance(
+        interaction.channel, discord.TextChannel
     ):
         await interaction.followup.send(config.no_guild_message, ephemeral=True)
         return False
 
-    try:
-        roles = get_roles_ids(interaction.channel.id)
-        if not roles or not roles.full_id or not roles.part_id:
-            await interaction.followup.send(
-                config.no_permission_clock_message, ephemeral=True
-            )
-            return False
-        agent_role = interaction.guild.get_role(roles.full_id)
-        part_role = interaction.guild.get_role(roles.part_id)
-        if agent_role or part_role:
-            if not isinstance(interaction.user, discord.Member):
-                await interaction.followup.send(
-                    config.no_permission_clock_message, ephemeral=True
-                )
-                return False
-
-            if not (
-                agent_role in interaction.user.roles
-                or part_role in interaction.user.roles
-            ):
-                await interaction.followup.send(
-                    config.no_permission_clock_message, ephemeral=True
-                )
-                return False
-        return True
-    except Exception as e:
-        print("Error checking role:", e)
+    roles = get_roles_ids(interaction.channel.id)
+    if not roles or not roles.full_id:
         await interaction.followup.send(
             config.no_permission_clock_message, ephemeral=True
         )
         return False
+
+    agent_role = interaction.guild.get_role(roles.full_id)
+    if not agent_role:
+        await interaction.followup.send(
+            config.no_permission_clock_message, ephemeral=True
+        )
+        return False
+
+    part_role = None
+    if roles.part_id:
+        part_role = interaction.guild.get_role(roles.part_id)
+
+    if not isinstance(interaction.user, discord.Member):
+        await interaction.followup.send(
+            config.no_permission_clock_message, ephemeral=True
+        )
+        return False
+
+    if not (agent_role in interaction.user.roles or part_role in interaction.user.roles):
+        await interaction.followup.send(
+            config.no_permission_clock_message, ephemeral=True
+        )
+        return False
+
+    return True
