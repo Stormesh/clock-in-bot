@@ -3,7 +3,8 @@
 import { signOut } from "next-auth/react";
 import React from "react";
 import { usePopupStore } from "../zustand/popupStore";
-import PanelButton from "./PanelButton";
+import SidebarButton from "./SidebarButton";
+import { faSignOut } from "@fortawesome/free-solid-svg-icons";
 
 const SignOutButton = () => {
   const { resetPopup } = usePopupStore();
@@ -24,7 +25,7 @@ const SignOutButton = () => {
     }
   };
 
-  return <PanelButton text="Sign Out" onClick={handleSignOut} />;
+  return <SidebarButton icon={faSignOut} text="Sign Out" onClick={handleSignOut} />;
 };
 
 export default SignOutButton;

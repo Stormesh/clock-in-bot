@@ -1,7 +1,6 @@
 import ClockList from "./components/ClockList";
 import { auth } from "../auth";
 import Warning from "./components/Warning";
-import UserPanel from "./components/UserPanel";
 import GlobalPopup from "./components/GlobalPopup";
 import { SessionProvider } from "next-auth/react";
 
@@ -20,7 +19,6 @@ export default async function Home() {
 
   return (
     <>
-      <UserPanel />
       <GlobalPopup />
       <SessionProvider>
         <ClockList />

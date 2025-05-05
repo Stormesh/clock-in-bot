@@ -91,11 +91,11 @@ const ClockList = () => {
   }, [userData]);
 
   return (
-    <>
+    <div className="flex items-center justify-center">
       {userData.length > 0 ? (
-        <table className="mt-10 mx-auto w-fit table border-2 border-collapse shadow-sm shadow-black">
+        <table className="mt-28 mx-auto w-fit table border-2 border-collapse">
           <ClockHeader />
-          <tbody className="text-center border-2 border-table-border">
+          <tbody className="text-center border-2">
             {userData.map((user) => {
               return (
                 <ClockCard
@@ -115,11 +115,11 @@ const ClockList = () => {
           </tbody>
         </table>
       ) : (
-        <h2 className="text-center text-5xl text-white font-sans mt-[25rem]">
+        <h2 className="text-center text-5xl dark:text-white font-sans">
           No one is clocked in yet.
         </h2>
       )}
-    </>
+    </div>
   );
 };
 

@@ -68,7 +68,7 @@ const ClockCard: FC<IUserProps> = ({
   return (
     <>
       <tr
-        className={`bg-card-bg border-2 border-table-border ${
+        className={`border-2 ${
           canKickOrWarn && "border-b-transparent"
         } text-lg md:text-3xl`}
       >
@@ -89,7 +89,7 @@ const ClockCard: FC<IUserProps> = ({
         {timeElement(breakTime, onBreak, "☕")}
       </tr>
       {canKickOrWarn && (
-        <tr className="bg-card-bg">
+        <tr>
           <td colSpan={4}>
             <div className="flex items-center justify-center">
               <div className="bg-linear-to-t p-2 from-card-bg to-table-border rounded-t-full w-1/2">
