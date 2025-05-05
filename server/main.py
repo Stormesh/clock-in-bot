@@ -153,18 +153,33 @@ async def remove(
     interaction: discord.Interaction,
     channel: discord.TextChannel,
 ):
-
     if not await is_verified(interaction):
         return
 
     _channel = get_channel(channel.id)
-    if not (_channel and _channel.message_id):
+    if not _channel or not _channel.message_id:
+        await interaction.response.send_message(
+            "Cannot find the message for the clock app in this channel. Please make sure you have the right channel",
+            ephemeral=True,
+        )
         return
 
     message = await channel.fetch_message(int(_channel.message_id))
+    if not message:
+        await interaction.response.send_message(
+            "Cannot find the message for the clock app in this channel. Please make sure you have the right channel",
+            ephemeral=True,
+        )
+        return
 
-    if message:
+    try:
         await message.delete()
+    except discord.Forbidden:
+        await interaction.response.send_message(
+            "I don't have permission to delete the message for the clock app in this channel",
+            ephemeral=True,
+        )
+        return
 
     remove_channel(channel.id)
 
