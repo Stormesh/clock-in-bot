@@ -31,11 +31,16 @@ const ClockCard: FC<IUserProps> = ({
   onMeeting,
 }) => {
   const { data: session } = useSession();
+  const sessionUser = session?.user;
 
-  const canKickOrWarn = hasAnyPermission(
-    [Permissions.Warn, Permissions.Kick],
-    session?.user
-  );
+  if (!sessionUser) {
+    return null;
+  }
+
+  const canKickOrWarn = hasAnyPermission(sessionUser, [
+    Permissions.Warn,
+    Permissions.Kick,
+  ]);
 
   const setZeros = (num: number) => {
     return num < 10 ? `0${num}` : num;
@@ -94,10 +99,10 @@ const ClockCard: FC<IUserProps> = ({
           <td colSpan={4}>
             <div className="flex items-center justify-center">
               <div className="bg-linear-to-t p-2 from-card-bg to-table-border rounded-t-full w-1/2">
-                {hasPermission(Permissions.Warn, session?.user) && (
+                {hasPermission(sessionUser, Permissions.Warn) && (
                   <WarnButton userId={id} />
                 )}
-                {hasPermission(Permissions.Kick, session?.user) && (
+                {hasPermission(sessionUser, Permissions.Kick) && (
                   <KickButton userId={id} />
                 )}
               </div>

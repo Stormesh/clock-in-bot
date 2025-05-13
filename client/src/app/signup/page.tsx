@@ -13,8 +13,9 @@ const page = async () => {
   const roleNames = await getRoleNamesAction();
 
   const session = await auth();
+  const sessionUser = session?.user;
 
-  if (!hasPermission(Permissions.SignUp, session?.user)) {
+  if (!sessionUser || !hasPermission(sessionUser, Permissions.SignUp)) {
     return <Warning />;
   }
 

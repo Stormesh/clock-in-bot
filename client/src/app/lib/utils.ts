@@ -27,8 +27,8 @@ export const connectDB = async () => {
   }
 };
 
-export const hasPermission = (permission: Permissions, user?: User) =>
+export const hasPermission = (user: User, permission: Permissions) =>
   user?.roleId?.permissions?.includes(permission);
 
-export const hasAnyPermission = (permissions: Permissions[], user?: User) =>
+export const hasAnyPermission = (user: User, permissions: Permissions[]) =>
   permissions.some(p => user?.roleId?.permissions?.includes(p));

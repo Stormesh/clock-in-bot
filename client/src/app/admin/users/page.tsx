@@ -12,9 +12,11 @@ export const dynamic = "force-dynamic";
 
 const page = async () => {
   const session = await auth();
+  const sessionUser = session?.user;
 
   if (
-    !hasAnyPermission([Permissions.Update, Permissions.Delete], session?.user)
+    !sessionUser ||
+    !hasAnyPermission(sessionUser, [Permissions.Update, Permissions.Delete])
   ) {
     return <Warning />;
   }

@@ -28,6 +28,11 @@ const AdminUsers: FC<IUsersTableProps> = ({ users, initialRoleNames }) => {
   const { show, text, resetPopup, onConfirm, onDismiss } = usePopupStore();
 
   const { data: session } = useSession();
+  const sessionUser = session?.user;
+
+  if (!sessionUser) {
+    return null;
+  }
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
@@ -169,7 +174,7 @@ const AdminUsers: FC<IUsersTableProps> = ({ users, initialRoleNames }) => {
               </td>
               <td className="select-none text-center">
                 <Suspense fallback={<GearSpin />}>
-                  {hasPermission(Permissions.Update, session?.user) && (
+                  {hasPermission(sessionUser, Permissions.Update) && (
                     <AdminButton
                       clickEvent={() =>
                         handleUpdateUser(
@@ -180,7 +185,7 @@ const AdminUsers: FC<IUsersTableProps> = ({ users, initialRoleNames }) => {
                       text="Update"
                     />
                   )}
-                  {hasPermission(Permissions.Delete, session?.user) && (
+                  {hasPermission(sessionUser, Permissions.Delete) && (
                     <AdminButton
                       clickEvent={() =>
                         handleDeleteUser(user._id as Types.ObjectId)

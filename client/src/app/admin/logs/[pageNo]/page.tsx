@@ -13,8 +13,9 @@ const page = async ({ params }: { params: Promise<{ pageNo: number }> }) => {
   const currentPage = Number(pageNo);
 
   const session = await auth();
+  const sessionUser = session?.user;
 
-  if (!hasPermission(Permissions.Update, session?.user)) {
+  if (!sessionUser || !hasPermission(sessionUser, Permissions.Update)) {
     return <Warning />;
   }
 

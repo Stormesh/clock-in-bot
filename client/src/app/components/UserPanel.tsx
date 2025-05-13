@@ -7,7 +7,11 @@ import { hasAnyPermission, hasPermission } from "../lib/utils";
 
 const UserPanel = async () => {
   const session = await auth();
-  const user = session?.user;
+  const sessionUser = session?.user;
+
+  if (!sessionUser) {
+    return null;
+  }
 
   return (
     <div className="flex flex-col justify-center items-center">
@@ -16,10 +20,10 @@ const UserPanel = async () => {
         <span className="font-bold text-3xl">{session?.user?.name}!</span>
       </h2>
       <div className="flex justify-center items-center mt-2">
-        {hasPermission(Permissions.SignUp, user) && (
+        {hasPermission(sessionUser, Permissions.SignUp) && (
           <PanelButton text="Sign Up" isLink link="/signup" />
         )}
-        {hasAnyPermission([Permissions.Update, Permissions.Delete], user) && (
+        {hasAnyPermission(sessionUser, [Permissions.Update, Permissions.Delete]) && (
           <PanelButton text="Admin" isLink link="/admin" />
         )}
         <SignOutButton />
