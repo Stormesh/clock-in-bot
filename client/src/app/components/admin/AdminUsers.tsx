@@ -13,6 +13,7 @@ import GearSpin from "../GearSpin";
 import { usePopupStore } from "../../zustand/popupStore";
 import Popup from "../Popup";
 import AdminButton from "./AdminButton";
+import { hasPermission } from "../../lib/utils";
 
 interface IUsersTableProps {
   users: PopulatedUser[];
@@ -168,20 +169,7 @@ const AdminUsers: FC<IUsersTableProps> = ({ users, initialRoleNames }) => {
               </td>
               <td className="select-none text-center">
                 <Suspense fallback={<GearSpin />}>
-                  {session?.user?.roleId?.permissions?.includes(
-                    Permissions.Update
-                  ) && (
-                    // <button
-                    //   onClick={() =>
-                    //     handleUpdateUser(
-                    //       user._id as Types.ObjectId,
-                    //       value[index]
-                    //     )
-                    //   }
-                    //   className={`bg-green-800 hover:bg-green-600 hover:scale-95 font-bold transition-all rounded-lg p-1 m-1 cursor-pointer`}
-                    // >
-                    //   Update
-                    // </button>
+                  {hasPermission(Permissions.Update, session?.user) && (
                     <AdminButton
                       clickEvent={() =>
                         handleUpdateUser(
@@ -192,17 +180,7 @@ const AdminUsers: FC<IUsersTableProps> = ({ users, initialRoleNames }) => {
                       text="Update"
                     />
                   )}
-                  {session?.user?.roleId?.permissions?.includes(
-                    Permissions.Delete
-                  ) && (
-                    // <button
-                    //   onClick={() =>
-                    //     handleDeleteUser(user._id as Types.ObjectId)
-                    //   }
-                    //   className={`bg-red-800 hover:bg-red-600 hover:scale-95 font-bold transition-all rounded-lg p-1 m-1 cursor-pointer`}
-                    // >
-                    //   Delete
-                    // </button>
+                  {hasPermission(Permissions.Delete, session?.user) && (
                     <AdminButton
                       clickEvent={() =>
                         handleDeleteUser(user._id as Types.ObjectId)

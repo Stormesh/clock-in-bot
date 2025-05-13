@@ -6,6 +6,7 @@ import { getUsersAction } from "../../actions/users";
 import { SessionProvider } from "next-auth/react";
 import { Permissions } from "../../lib/enums";
 import { getRoleNamesAction } from "../../actions/roles";
+import { hasAnyPermission } from "../../lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -13,10 +14,7 @@ const page = async () => {
   const session = await auth();
 
   if (
-    !session?.user.roleId.permissions?.some(
-      (permission) =>
-        permission === Permissions.Delete || permission === Permissions.Update
-    )
+    !hasAnyPermission([Permissions.Update, Permissions.Delete], session?.user)
   ) {
     return <Warning />;
   }

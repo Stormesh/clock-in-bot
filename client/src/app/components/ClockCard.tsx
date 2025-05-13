@@ -5,6 +5,7 @@ import WarnButton from "./WarnButton";
 import KickButton from "./KickButton";
 import { Permissions } from "../lib/enums";
 import { useSession } from "next-auth/react";
+import { hasAnyPermission, hasPermission } from "../lib/utils";
 
 interface IUserProps {
   id: string;
@@ -31,9 +32,9 @@ const ClockCard: FC<IUserProps> = ({
 }) => {
   const { data: session } = useSession();
 
-  const canKickOrWarn = session?.user.roleId.permissions?.some(
-    (permission) =>
-      permission === Permissions.Kick || permission === Permissions.Warn
+  const canKickOrWarn = hasAnyPermission(
+    [Permissions.Warn, Permissions.Kick],
+    session?.user
   );
 
   const setZeros = (num: number) => {
@@ -93,12 +94,12 @@ const ClockCard: FC<IUserProps> = ({
           <td colSpan={4}>
             <div className="flex items-center justify-center">
               <div className="bg-linear-to-t p-2 from-card-bg to-table-border rounded-t-full w-1/2">
-                {session?.user.roleId.permissions?.includes(
-                  Permissions.Warn
-                ) && <WarnButton userId={id} />}
-                {session?.user.roleId.permissions?.includes(
-                  Permissions.Kick
-                ) && <KickButton userId={id} />}
+                {hasPermission(Permissions.Warn, session?.user) && (
+                  <WarnButton userId={id} />
+                )}
+                {hasPermission(Permissions.Kick, session?.user) && (
+                  <KickButton userId={id} />
+                )}
               </div>
             </div>
           </td>

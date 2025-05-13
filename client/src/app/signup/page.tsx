@@ -5,6 +5,7 @@ import { auth } from "@/src/auth";
 import Warning from "@components/Warning";
 import { Permissions } from "../lib/enums";
 import { getRoleNamesAction } from "../actions/roles";
+import { hasPermission } from "../lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +14,7 @@ const page = async () => {
 
   const session = await auth();
 
-  if (!session?.user.roleId.permissions?.includes(Permissions.SignUp)) {
+  if (!hasPermission(Permissions.SignUp, session?.user)) {
     return <Warning />;
   }
 
