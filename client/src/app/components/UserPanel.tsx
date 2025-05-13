@@ -7,6 +7,7 @@ import { Permissions } from "../lib/enums";
 import { faBusinessTime, faDoorOpen, faHome } from "@fortawesome/free-solid-svg-icons";
 import { useSession } from "next-auth/react";
 import { IconDefinition } from "@fortawesome/fontawesome-svg-core";
+import { hasPermission, hasAnyPermission } from "../lib/utils";
 
 const UserPanel = () => {
   const { data: session } = useSession();
@@ -14,19 +15,12 @@ const UserPanel = () => {
 
   if (!user) return null;
 
-  const hasPermission = (permission: Permissions) =>
-    user.roleId?.permissions?.includes(permission);
-
-  const hasAnyPermission = (permissions: Permissions[]) =>
-    permissions.some(p => user.roleId?.permissions?.includes(p));
-
-  const renderSidebarButton = (text: string, icon: IconDefinition, link: string, isLink: boolean = true) => (
+  const renderSidebarButton = (text: string, icon: IconDefinition, href?: string) => (
     <SidebarButton
       key={text}
       text={text}
       icon={icon}
-      isLink={isLink}
-      link={link}
+      href={href}
     />
   );
 
@@ -40,8 +34,8 @@ const UserPanel = () => {
         <hr className="border-t mx-6 mt-4 border-gray-400 dark:border-zinc-600" />
         <div className="my-5">
           {renderSidebarButton("Home", faHome, "")}
-          {hasPermission(Permissions.SignUp) && renderSidebarButton("Sign Up", faDoorOpen, "signup")}
-          {hasAnyPermission([Permissions.Delete, Permissions.Update]) && renderSidebarButton("Admin", faBusinessTime, "admin")}
+          {hasPermission(user, Permissions.SignUp) && renderSidebarButton("Sign Up", faDoorOpen, "signup")}
+          {hasAnyPermission(user, [Permissions.Delete, Permissions.Update]) && renderSidebarButton("Admin", faBusinessTime, "admin")}
           <SignOutButton />
         </div>
       </div>

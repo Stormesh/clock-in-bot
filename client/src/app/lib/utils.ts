@@ -1,4 +1,6 @@
+import { User } from "next-auth";
 import mongoose from "mongoose";
+import { Permissions } from "./enums";
 
 const connection = {
   isConnected: 0,
@@ -24,3 +26,9 @@ export const connectDB = async () => {
     console.error(error);
   }
 };
+
+export const hasPermission = (user: User, permission: Permissions) =>
+  user?.roleId?.permissions?.includes(permission);
+
+export const hasAnyPermission = (user: User, permissions: Permissions[]) =>
+  permissions.some(p => user?.roleId?.permissions?.includes(p));
