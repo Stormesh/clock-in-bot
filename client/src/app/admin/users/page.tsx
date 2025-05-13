@@ -6,17 +6,17 @@ import { getUsersAction } from "../../actions/users";
 import { SessionProvider } from "next-auth/react";
 import { Permissions } from "../../lib/enums";
 import { getRoleNamesAction } from "../../actions/roles";
+import { hasAnyPermission } from "../../lib/utils";
 
 export const dynamic = "force-dynamic";
 
 const page = async () => {
   const session = await auth();
+  const sessionUser = session?.user;
 
   if (
-    !session?.user.roleId.permissions?.some(
-      (permission) =>
-        permission === Permissions.Delete || permission === Permissions.Update
-    )
+    !sessionUser ||
+    !hasAnyPermission(sessionUser, [Permissions.Update, Permissions.Delete])
   ) {
     return <Warning />;
   }

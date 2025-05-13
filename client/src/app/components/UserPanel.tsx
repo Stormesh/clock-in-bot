@@ -25,19 +25,33 @@ const UserPanel = () => {
   );
 
   return (
-    <div className="inline-flex flex-col dark:bg-zinc-900 bg-gray-100 w-64 h-screen fixed">
-      <div className="flex flex-col">
-        <h2 className="text-center text-xl dark:text-white font-sans">
-          Welcome <br />
-          <span className="font-bold text-3xl">{user.name}!</span>
-        </h2>
-        <hr className="border-t mx-6 mt-4 border-gray-400 dark:border-zinc-600" />
-        <div className="my-5">
-          {renderSidebarButton("Home", faHome, "")}
-          {hasPermission(user, Permissions.SignUp) && renderSidebarButton("Sign Up", faDoorOpen, "signup")}
-          {hasAnyPermission(user, [Permissions.Delete, Permissions.Update]) && renderSidebarButton("Admin", faBusinessTime, "admin")}
-          <SignOutButton />
-        </div>
+    <div className="flex flex-col justify-center items-center">
+      <h2 className="text-center text-xl text-white font-sans">
+        Welcome <br />
+        <span className="font-bold text-3xl">{session?.user?.name}!</span>
+      </h2>
+      <div className="flex justify-center items-center mt-2">
+        {session?.user?.roleId &&
+          session?.user?.roleId.permissions?.includes(Permissions.SignUp) && (
+            <PanelButton
+              text="Sign Up"
+              isLink
+              link="/signup"
+            />
+          )}
+        {session?.user?.roleId &&
+          session?.user.roleId.permissions?.some(
+            (permission) =>
+              permission === Permissions.Delete ||
+              permission === Permissions.Update
+          ) && (
+            <PanelButton
+              text="Admin"
+              isLink
+              link="/admin"
+            />
+          )}
+        <SignOutButton />
       </div>
     </div>
   );

@@ -5,6 +5,7 @@ import Warning from "@components/Warning";
 import { getTotalLogsPagesAction } from "@/src/app/actions/logs";
 import Pagination from "@components/admin/Pagination";
 import { Permissions } from "@/src/app/lib/enums";
+import { hasPermission } from "@/src/app/lib/utils";
 
 const page = async ({ params }: { params: Promise<{ pageNo: number }> }) => {
   const { pageNo } = await params;
@@ -12,8 +13,9 @@ const page = async ({ params }: { params: Promise<{ pageNo: number }> }) => {
   const currentPage = Number(pageNo);
 
   const session = await auth();
+  const sessionUser = session?.user;
 
-  if (!session?.user.roleId.permissions?.includes(Permissions.Logs)) {
+  if (!sessionUser || !hasPermission(sessionUser, Permissions.Update)) {
     return <Warning />;
   }
 
