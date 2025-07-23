@@ -17,18 +17,20 @@ This Discord bot helps in monitoring users' clock-in, break, and meeting statuse
 
 - Python 3.x
 - Node.js
-- Docker (optional)
+- PostgreSQL
+- MongoDB
+- Docker (optional, but recommended)
 
-### Installation
+### Installation (without Docker)
 
-1. **Clone the Repository**
+1. **Clone the repository**
 
    ```bash
    git clone https://github.com/Stormesh/ClockInBot.git
    cd ClockInBot
    ```
 
-2. **Create a Python Virtual Environment and Install Dependencies**
+2. **Create a Python virtual environment and install dependencies**
 
    ```bash
    cd server # Move to the server directory
@@ -38,39 +40,175 @@ This Discord bot helps in monitoring users' clock-in, break, and meeting statuse
    cd .. # Move back to the root directory
    ```
 
-3. **Set Up Discord Bot**
+3. **Set up the Discord bot**
 
    - Create a new Discord bot on the [Discord Developer Portal](https://discord.com/developers/applications).
+   - Rename/copy the `.env.example` file to `.env` in the `/server/` directory.
+   - Copy the bot token and add it to the `/server/.env` file like this...
+     ```
+     BOT_TOKEN=your_token_here
+     ```
+   - In your server directory, run the following command:
+     ```bash
+     python main.py
+     ```
+
+4. **Set up the Next.js web app**
+
+   - Rename/copy the `.env.example` file to `.env` in the `/client/` directory.
+   - Copy the auth secret if needed and add it to the `/client/.env` file like this...
+     ```
+     AUTH_SECRET=your_auth_secret
+     ```
+   - In your client directory, run the following commands:
+     ```bash
+     npm install # To install dependencies
+     npx auth secret # To create an auth secret
+     ```
+
+5. **Set up the bot on your Discord server**
+
+   - Create a new Discord server or use an existing one.
+   - Add the bot to your server using the OAuth2 URL generated on the Discord Developer Portal.
+   - Give the bot the necessary permissions to read and send messages.
+   - Create a new text channel to deploy the bot.
+   - Create a text channel for the bot to send status updates (logs arg).
+   - Create a role for users to be able to clock in (role arg).
+   - Then use the bot channel, logs channel and the role in the setup command like this:
+     ```bash
+     /setup channel name role logs
+     ```
+   - [Optional] You can add 4 more roles for clocking in, break, meeting and part time users.
+   - [Optional] You can add a SheetDB API URL for Google Sheets support.
+
+6. **Set up the PostgreSQL database**
+
+   - Install and start PostgreSQL.
+   - Make sure to change `POSTGRES_USER` and `POSTGRES_PASSWORD` in the `.env` file in the `/server/` directory to match your PostgreSQL credentials.
+   - Create a new database named `clockinbot`.
+   - In the server folder, after installing the required python packages, run the following command:
+     ```bash
+     alembic upgrade head
+     ```
+   - This will create the database tables and apply any pending migrations.
+
+   **Note**: If you're having trouble setting up PostgreSQL, refer to the [PostgreSQL documentation](https://www.postgresql.org/docs/current/tutorial-start.html) for installation and setup instructions, or even better, use a Docker container for PostgreSQL.
+
+7. **Set up the MongoDB database**
+
+   - Install and start MongoDB.
+   - Make sure to change `MONGODB_URI` in the `.env` file in the `/server/` directory to match your MongoDB connection string.
+   - In the client folder, after installing the required node packages, run the following command:
+     ```bash
+     npm run init
+     ```
+   - Enter your own root user credentials to create the admin user, which will be used to log into the web app.
+   - If successful, the MongoDB database will be set up and you can proceed to the next step.
+
+8. **Run the app**
+  - You can now run the flask server and the Next.js app by running the following commands from the root directory:
+    ```bash
+    npm install # To install dependencies
+    npm run build # To build the Next.js app
+    npm start # To start the Next.js app and the Flask server
+    ```
+   - Visit `http://localhost:3000` to see the web app in action.
+   - Log into the web app with the admin user credentials.
+   - The Flask server will send user data to the Next.js app for real-time monitoring.
+   - You can modify the code in the `/server/` and `/client/` folders to customize the behavior of the app.
+
+### Installation (with Docker - `Recommended`)
+
+1. **Clone the repository**
+
+   ```bash
+   git clone https://github.com/Stormesh/ClockInBot.git
+   cd ClockInBot
+   ```
+
+2. **Set up the Discord bot**
+
+   - Create a new Discord bot on the [Discord Developer Portal](https://discord.com/developers/applications).
+   - Rename/copy the `.env.example` file to `.env` in the `/server/` directory.
    - Copy the bot token and add it to the `/server/.env` file like this...
      ```
      BOT_TOKEN=your_token_here
      ```
 
-4. **Set up the bot on your Discord server**
+3. **Set up the Next.js web app**
+
+   - Rename/copy the `.env.example` file to `.env` in the `/client/` directory.
+   - Run the following command from the client directory:
+     ```bash
+     npx auth secret # To create an auth secret
+     ```
+   - Copy the auth secret if needed and add it to the `/client/.env` file like this...
+     ```
+     AUTH_SECRET=your_auth_secret
+     ```
+
+4. **Set up the PostgreSQL database**
+
+   - Run the following command:
+     ```bash
+     docker compose run --rm server alembic upgrade head
+     ```
+   - This will create the database tables and apply any pending migrations.
+
+5. **Set up the MongoDB database**
+
+   - Write the following command in the terminal:
+     ```bash
+     docker compose run --rm web npm run init
+     ```
+   - Enter your own root user credentials to create the admin user, which will be used to log into the web app.
+   - If successful, the MongoDB database will be set up and you can proceed to the next step.
+
+6. **Build and run the Docker containers**
+
+   - Run the following command from the root directory:
+     ```bash
+     docker compose up -d --build
+     ```
+
+7. **Set up the bot on your Discord server**
 
    - Create a new Discord server or use an existing one.
    - Add the bot to your server using the OAuth2 URL generated on the Discord Developer Portal.
    - Give the bot the necessary permissions to read and send messages.
-   - Create a new text channel for the bot to send messages.
-
-6. **Set up the Next.js Web App**
-
-   - In your client directory, run the following commands:
+   - Create a new text channel to deploy the bot.
+   - Create a text channel for the bot to send status updates (logs arg).
+   - Create a role for users to be able to clock in (role arg).
+   - Then use the bot channel, logs channel and the role in the setup command like this:
      ```bash
-     cd client # Move to the client directory
-     npm install # To install dependencies
-     cd .. # Move back to the root directory
+     /setup channel name role logs
      ```
+   - [Optional] You can add 4 more roles for clocking in, break, meeting and part time users.
+   - [Optional] You can add a SheetDB API URL for Google Sheets support.
 
-7. **Run the app**
-  - You can now run the flask server and the Next.js app by running the following commands:
-    ```bash
-    npm install # To install dependencies
-    npm run dev # To start the Next.js app
-    ```
+
+8. **Access the web app**
+
    - Visit `http://localhost:3000` to see the web app in action.
+   - Log into the web app with the admin user credentials.
    - The Flask server will send user data to the Next.js app for real-time monitoring.
-   - You can customize the web app to suit your needs.
+   - You can modify the code in the `/server/` and `/client/` folders to customize the behavior of the app.
+
+## Dashboard
+
+The web app provides a dashboard for monitoring agents. It shows who is clocked in, on break, or in a meeting.
+
+![Dashboard](/preview/dashboard.png)
+
+### Roles
+
+There are 4 roles for users to monitor the dashboard, each with different permissions.
+| Role        | Permissions                                                                               |
+| :---------- | :---------------------------------------------------------------------------------------: |
+| Client      | Can only view the dashboard                                                               |
+| User        | Can view and kick/warn clocked in users                                                   |
+| Admin       | Same as User, but can create accounts and view admin logs                                 |
+| Super Admin | Has all permissions above, but can delete accounts (including admins) and update accounts |
 
 ## Usage
 
@@ -96,7 +234,7 @@ This Discord bot helps in monitoring users' clock-in, break, and meeting statuse
 ## Todo
 
 - Add tabs for different user groups to monitor their activity.
-- Add a system to track users when they are actively monitoring the dashboard + check how many IPs are logged into this user's account.
+- Add a system to track users when they are actively monitoring the dashboard.
 
 
 ## Contributing

@@ -21,6 +21,7 @@ services:
       - ./client/.env.docker
     networks:
       - clock-network
+      - caddy_network
     ports:
       - 3000:3000
     restart: always
@@ -58,3 +59,5 @@ volumes:
 networks:
   clock-network:
     driver: bridge
+  caddy_network:
+    external: true

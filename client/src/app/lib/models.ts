@@ -42,6 +42,12 @@ export interface IRole {
   __v?: number
 }
 
+export interface IRoleNoId {
+  name: string;
+  priority: number;
+  permissions?: string[];
+}
+
 const roleSchema = new mongoose.Schema({
   name: {
     type: String,

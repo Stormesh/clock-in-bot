@@ -217,6 +217,22 @@ def set_server(server_id: int, server_name: str):
             session.rollback()
             print(f"Error setting server {server_id}: {e}")
 
+def remove_server(server_id: int):
+    with Session(db_engine) as session:
+        try:
+            statement = select(Server).where(Server.id == server_id)
+            server = session.exec(statement).one_or_none()
+
+            if server:
+                session.delete(server)
+                session.commit()
+                print(f"Removed server '{server.name}' ({server_id})")
+            else:
+                print(f"Server {server_id} not found")
+
+        except Exception as e:
+            session.rollback()
+            print(f"Error removing server {server_id}: {e}")
 
 # Roles
 def get_role(channel_id: int, role_type: str):

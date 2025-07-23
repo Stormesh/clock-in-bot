@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { QueryProvider } from "./QueryProvider";
 
 export const metadata: Metadata = {
   title: "Clock In",
@@ -14,7 +15,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="bg-gradient-to-tr bg-fixed from-[#151216] to-[#4d3e66]">
-        {children}
+        <QueryProvider>
+          {children}
+        </QueryProvider>
       </body>
     </html>
   );

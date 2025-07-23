@@ -9,7 +9,7 @@ users_bp = Blueprint("users", __name__)
 
 @users_bp.route("/api/users", methods=["GET"])
 def get_user_data():
-    users = [  # type: ignore
+    users = [
         {
             **user,
             "id": str(user["id"]),
@@ -23,7 +23,7 @@ def get_user_data():
 
 @users_bp.route("/api/users/<int:channel_id>", methods=["GET"])
 def get_users_by_channel(channel_id: int):
-    users = [  # type: ignore
+    users = [
         {
             **user,
             "id": str(user["id"]),

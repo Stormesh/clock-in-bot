@@ -28,7 +28,9 @@ yarn-debug.log*
 yarn-error.log*
 
 # env files
-.env*.local
+.env*
+!.env.example
+!.env.docker
 
 # data
 data.json
@@ -44,3 +46,5 @@ next-env.d.ts
 __pycache__/
 venv/
 config.toml
+server/.env
+client/.env

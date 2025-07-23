@@ -1,5 +1,5 @@
 import { Types } from "mongoose";
-import { ILog, IRole, IUser, Log, PopulatedUser, Role, User } from "./models";
+import { ILog, IRole, IRoleNoId, IUser, Log, PopulatedUser, Role, User } from "./models";
 import { connectDB } from "./utils";
 
 // User
@@ -115,6 +115,32 @@ export const getRoleNames = async () => {
   } catch (error) {
     console.error(error);
     throw new Error("Failed to get role names");
+  }
+};
+
+export const createRole = async (
+  name: string,
+  priority: number,
+  permissions: string[]
+) => {
+  try {
+    await connectDB();
+    const role = await Role.create({ name, priority, permissions });
+    return role;
+  } catch (error) {
+    console.error(error);
+    throw new Error("Failed to create role");
+  }
+};
+
+export const createRoles = async (roles: IRoleNoId[]) => {
+  try {
+    await connectDB();
+    const role = await Role.create(roles);
+    return role;
+  } catch (error) {
+    console.error(error);
+    throw new Error("Failed to create roles");
   }
 };
 
