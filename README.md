@@ -27,7 +27,7 @@ This Discord bot helps in monitoring users' clock-in, break, and meeting statuse
 
    ```bash
    git clone https://github.com/Stormesh/clock-in-bot.git
-   cd ClockInBot
+   cd clock-in-bot
    ```
 
 2. **Create a Python virtual environment and install dependencies**
@@ -123,7 +123,7 @@ This Discord bot helps in monitoring users' clock-in, break, and meeting statuse
 
    ```bash
    git clone https://github.com/Stormesh/clock-in-bot.git
-   cd ClockInBot
+   cd clock-in-bot
    ```
 
 2. **Set up the Discord bot**
