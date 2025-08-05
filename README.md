@@ -26,7 +26,7 @@ This Discord bot helps in monitoring users' clock-in, break, and meeting statuse
 1. **Clone the repository**
 
    ```bash
-   git clone https://github.com/Stormesh/ClockInBot.git
+   git clone https://github.com/Stormesh/clock-in-bot.git
    cd ClockInBot
    ```
 
@@ -122,7 +122,7 @@ This Discord bot helps in monitoring users' clock-in, break, and meeting statuse
 1. **Clone the repository**
 
    ```bash
-   git clone https://github.com/Stormesh/ClockInBot.git
+   git clone https://github.com/Stormesh/clock-in-bot.git
    cd ClockInBot
    ```
 
